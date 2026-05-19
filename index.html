@@ -46,6 +46,9 @@
   body.light header { background: rgba(244,243,248,0.9); }
   .app-title { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
   .header-right { display: flex; align-items: center; gap: 10px; }
+  .header-sig { display: flex; align-items: center; gap: 8px; }
+  .header-sig-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; object-position: center top; border: 1.5px solid var(--accent); flex-shrink: 0; }
+  .header-sig-name { font-size: 13px; font-weight: 600; color: var(--text2); letter-spacing: -0.2px; }
   .lock-btn { background: none; border: 0.5px solid var(--border2); border-radius: 8px; color: var(--text2); font-size: 12px; padding: 6px 12px; cursor: pointer; transition: all 0.15s; }
   .lock-btn:hover { border-color: var(--accent); color: var(--accent); }
 
@@ -274,6 +277,10 @@
 <div id="app">
   <header>
     <div class="app-title">💰 Finance</div>
+    <div class="header-sig">
+      <img class="header-sig-avatar" src="iconme.jpeg" alt="Narain">
+      <span class="header-sig-name">Narain</span>
+    </div>
     <div class="header-right">
       <div id="sync-status" style="font-size:11px;color:var(--green);opacity:0;transition:opacity 0.4s"></div>
       <div id="header-summary" style="font-size:13px;color:var(--text2)"></div>
