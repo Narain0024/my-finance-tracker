@@ -710,15 +710,8 @@ async function load() {
     const rows = await res.json();
     if (rows && rows.length > 0 && rows[0].data) {
       const remote = rows[0].data;
-      // Only merge remote if it has actual data, to avoid overwriting local with empty remote
-      const remoteHasData = (remote.expenses && remote.expenses.length > 0) ||
-                            (remote.income && remote.income.length > 0) ||
-                            (remote.savings && remote.savings.length > 0) ||
-                            (remote.owed && remote.owed.length > 0);
-      const localHasData = (state.expenses && state.expenses.length > 0) ||
-                           (state.income && state.income.length > 0) ||
-                           (state.savings && state.savings.length > 0) ||
-                           (state.owed && state.owed.length > 0);
+      const remoteHasData = (remote.expenses&&remote.expenses.length)||(remote.income&&remote.income.length)||(remote.savings&&remote.savings.length)||(remote.owed&&remote.owed.length);
+      const localHasData = (state.expenses&&state.expenses.length)||(state.income&&state.income.length)||(state.savings&&state.savings.length)||(state.owed&&state.owed.length);
       if (remoteHasData || !localHasData) {
         state = Object.assign({}, state, remote, {
           pin: remote.pin || state.pin,
@@ -907,17 +900,8 @@ function showTab(name, e) {
 }
 function toggleForm(id) {
   document.getElementById(id).classList.toggle('open');
-  // Refresh date fields to today whenever a form is opened
-  if (id === 'exp-form') {
-    const d = document.getElementById('exp-date');
-    if (d && !d.value) d.value = today();
-    else if (d) d.value = today();
-  }
-  if (id === 'inc-form') {
-    const d = document.getElementById('inc-date');
-    if (d && !d.value) d.value = today();
-    else if (d) d.value = today();
-  }
+  if (id === 'exp-form') { const d=document.getElementById('exp-date'); if(d) d.value=today(); }
+  if (id === 'inc-form') { const d=document.getElementById('inc-date'); if(d) d.value=today(); }
 }
 
 // ============================================================
@@ -1312,7 +1296,7 @@ function renderOverview() {
   document.getElementById('gauge-spent').textContent='₹'+fmt(monthSpent);
   document.getElementById('gauge-budget-label').textContent='Budget: ₹'+fmt(budget);
   document.getElementById('header-summary').textContent='₹'+fmt(monthSpent)+' / ₹'+fmt(budget);
-  document.getElementById('faceid-toggle').classList.toggle('on',state.faceIDEnabled);
+  const faceidToggle=document.getElementById('faceid-toggle'); if(faceidToggle) faceidToggle.classList.toggle('on',state.faceIDEnabled);
 }
 function setBudget() {
   const val=parseFloat(document.getElementById('budget-input').value);
