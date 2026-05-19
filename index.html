@@ -691,41 +691,43 @@ function showSyncStatus(s) {
 }
 
 async function load() {
+  // Step 1: Load from localStorage first so UI is never blank
   const d = localStorage.getItem('financeData');
   if (d) {
     try {
       const parsed = JSON.parse(d);
       state = Object.assign(state, parsed);
-    } catch(e) {}
-    if (!state.gifs) state.gifs = {};
-    if (!state.categories || !state.categories.length) state.categories = DEFAULT_CATS;
-    if (!state.income) state.income = [];
-    if (!state.recurring) state.recurring = [];
+    } catch(e) { console.warn('localStorage parse error', e); }
   }
+  if (!state.gifs) state.gifs = {};
+  if (!state.categories || !state.categories.length) state.categories = DEFAULT_CATS;
+  if (!state.income) state.income = [];
+  if (!state.recurring) state.recurring = [];
+
+  // Step 2: Try to sync from Supabase without clobbering local data
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/finance?id=eq.${DATA_ID}`, {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
     });
-    if (!res.ok) throw new Error('Network error');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const rows = await res.json();
     if (rows && rows.length > 0 && rows[0].data) {
       const remote = rows[0].data;
-      const remoteHasData = (remote.expenses&&remote.expenses.length)||(remote.income&&remote.income.length)||(remote.savings&&remote.savings.length)||(remote.owed&&remote.owed.length);
-      const localHasData = (state.expenses&&state.expenses.length)||(state.income&&state.income.length)||(state.savings&&state.savings.length)||(state.owed&&state.owed.length);
-      if (remoteHasData || !localHasData) {
-        state = Object.assign({}, state, remote, {
-          pin: remote.pin || state.pin,
-          faceIDEnabled: remote.faceIDEnabled !== undefined ? remote.faceIDEnabled : state.faceIDEnabled
-        });
-      }
+      // Merge remote into state — remote wins for data arrays, local wins for PIN
+      state = Object.assign({}, state, remote, {
+        pin: state.pin || remote.pin,
+        faceIDEnabled: state.faceIDEnabled !== undefined ? state.faceIDEnabled : (remote.faceIDEnabled || false)
+      });
       if (!state.gifs) state.gifs = {};
       if (!state.categories || !state.categories.length) state.categories = DEFAULT_CATS;
       if (!state.income) state.income = [];
       if (!state.recurring) state.recurring = [];
       localStorage.setItem('financeData', JSON.stringify(state));
-      renderAll();
     }
   } catch(e) { showSyncStatus('offline'); }
+
+  // Step 3: Always render after load, with whatever data we have
+  renderAll();
 }
 
 // ============================================================
@@ -895,13 +897,18 @@ function showTab(name, e) {
   if (e && e.target) e.target.classList.add('active');
   if (name==='charts') renderCharts();
   if (name==='overview') renderOverviewCharts();
-  if (name==='settings') { renderGifSlots(); renderCategorySettings(); document.getElementById('autolock-select').value = state.autoLock || 0; document.getElementById('lightmode-toggle').classList.toggle('on', state.lightMode); }
+  if (name==='settings') { renderGifSlots(); renderCategorySettings(); document.getElementById('autolock-select').value = state.autoLock || 0; document.getElementById('lightmode-toggle').classList.toggle('on', state.lightMode); const ft=document.getElementById('faceid-toggle'); if(ft) ft.classList.toggle('on',state.faceIDEnabled); }
   if (name==='summary') renderMonthlySummary();
 }
 function toggleForm(id) {
-  document.getElementById(id).classList.toggle('open');
-  if (id === 'exp-form') { const d=document.getElementById('exp-date'); if(d) d.value=today(); }
-  if (id === 'inc-form') { const d=document.getElementById('inc-date'); if(d) d.value=today(); }
+  const el = document.getElementById(id);
+  const wasOpen = el.classList.contains('open');
+  el.classList.toggle('open');
+  if (!wasOpen) {
+    // Form just opened — always refresh date fields to today
+    if (id === 'exp-form') { const d=document.getElementById('exp-date'); if(d) d.value=today(); }
+    if (id === 'inc-form') { const d=document.getElementById('inc-date'); if(d) d.value=today(); }
+  }
 }
 
 // ============================================================
@@ -1296,7 +1303,6 @@ function renderOverview() {
   document.getElementById('gauge-spent').textContent='₹'+fmt(monthSpent);
   document.getElementById('gauge-budget-label').textContent='Budget: ₹'+fmt(budget);
   document.getElementById('header-summary').textContent='₹'+fmt(monthSpent)+' / ₹'+fmt(budget);
-  const faceidToggle=document.getElementById('faceid-toggle'); if(faceidToggle) faceidToggle.classList.toggle('on',state.faceIDEnabled);
 }
 function setBudget() {
   const val=parseFloat(document.getElementById('budget-input').value);
@@ -1620,13 +1626,15 @@ function renderAll() {
 // ============================================================
 // INIT
 // ============================================================
-load();
-renderHeaderProfile();
-document.getElementById('exp-date').value=today();
-document.getElementById('inc-date').value=today();
-document.body.classList.toggle('light', state.lightMode);
-populateCatSelects();
-initLock();
+(async () => {
+  await load();
+  renderHeaderProfile();
+  document.getElementById('exp-date').value = today();
+  document.getElementById('inc-date').value = today();
+  document.body.classList.toggle('light', state.lightMode);
+  populateCatSelects();
+  initLock();
+})();
 </script>
 </body>
 </html>
