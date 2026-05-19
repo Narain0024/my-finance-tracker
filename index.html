@@ -254,11 +254,62 @@
     .form-row.triple { grid-template-columns: 1fr 1fr; }
     .budget-card { flex-direction: column; }
   }
+
+  /* GIF BANNER */
+  #gif-banner {
+    position: fixed; top: -160px; left: 0; right: 0; z-index: 2000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 12px 20px; gap: 14px;
+    background: rgba(15,15,17,0.97); backdrop-filter: blur(20px);
+    border-bottom: 0.5px solid var(--border2);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    transition: top 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  #gif-banner.show { top: 0; }
+  #gif-banner img { height: 80px; width: 80px; object-fit: cover; border-radius: 10px; }
+  .gif-banner-text { flex: 1; }
+  .gif-banner-title { font-size: 15px; font-weight: 600; color: var(--text); }
+  .gif-banner-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .gif-banner-close {
+    background: none; border: none; color: var(--text3); font-size: 20px;
+    cursor: pointer; padding: 4px; line-height: 1;
+  }
+
+  /* GIF SETTINGS */
+  .gif-slot {
+    background: var(--bg3); border: 0.5px solid var(--border2); border-radius: var(--radius);
+    padding: 12px 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px;
+  }
+  .gif-slot-preview { width: 52px; height: 52px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: var(--bg2); display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: 22px; overflow: hidden; }
+  .gif-slot-preview img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+  .gif-slot-info { flex: 1; }
+  .gif-slot-label { font-size: 13px; font-weight: 500; color: var(--text); }
+  .gif-slot-hint { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .gif-upload-btn {
+    padding: 6px 14px; background: none; border: 0.5px solid var(--border2); border-radius: var(--radius-sm);
+    color: var(--text2); font-size: 12px; cursor: pointer; white-space: nowrap; transition: all 0.15s;
+  }
+  .gif-upload-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .gif-clear-btn {
+    padding: 6px 10px; background: none; border: 0.5px solid rgba(240,96,96,0.3); border-radius: var(--radius-sm);
+    color: var(--red); font-size: 12px; cursor: pointer; transition: all 0.15s;
+  }
 </style>
 </head>
 <body>
 
 <!-- LOCK SCREEN -->
+
+<!-- GIF BANNER -->
+<div id="gif-banner">
+  <div class="gif-slot-preview" id="gif-banner-img-wrap"><img id="gif-banner-img" src="" alt=""></div>
+  <div class="gif-banner-text">
+    <div class="gif-banner-title" id="gif-banner-title">🎉 Nice one!</div>
+    <div class="gif-banner-sub" id="gif-banner-sub"></div>
+  </div>
+  <button class="gif-banner-close" onclick="closeBanner()">✕</button>
+</div>
+
 <div id="lock-screen">
   <div style="text-align:center">
     <div class="lock-icon">🔒</div>
@@ -541,6 +592,13 @@
       </div>
     </div>
     <div class="settings-section">
+      <div class="chart-title">GIF Celebrations</div>
+      <div class="settings-card" style="padding:14px">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Upload a GIF for each event. It slides in from the top when triggered.</div>
+        <div id="gif-slots-list"></div>
+      </div>
+    </div>
+    <div class="settings-section">
       <div class="chart-title">Data</div>
       <div class="settings-card">
         <div class="settings-row">
@@ -615,7 +673,7 @@ function showSyncStatus(s) {
 
 async function load() {
   const d = localStorage.getItem('financeData');
-  if (d) state = Object.assign(state, JSON.parse(d));
+  if (d) { const parsed = JSON.parse(d); state = Object.assign(state, parsed); if (!state.gifs) state.gifs = {}; }
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/finance?id=eq.${DATA_ID}`, {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
@@ -775,6 +833,7 @@ function showTab(name) {
   event.target.classList.add('active');
   if (name === 'charts') renderCharts();
   if (name === 'overview') renderOverviewCharts();
+  if (name === 'settings') renderGifSlots();
 }
 
 function toggleForm(id) {
@@ -793,6 +852,7 @@ function addExpense() {
   if (!desc || !amt || amt <= 0) { alert('Please fill in description and amount.'); return; }
   state.expenses.push({ id: Date.now(), desc, amt, cat, date });
   save(); renderAll();
+  checkExpenseMilestone();
   document.getElementById('exp-desc').value = '';
   document.getElementById('exp-amt').value = '';
   document.getElementById('exp-form').classList.remove('open');
@@ -876,6 +936,7 @@ function addWishItem() {
   }
   state.wishlist.push(item);
   save(); renderAll();
+  showBanner('wishlist_add', '✨ Added to wishlist!', item.name);
   document.getElementById('wish-name').value = '';
   document.getElementById('wish-price').value = '';
   document.getElementById('wish-form').classList.remove('open');
@@ -911,6 +972,7 @@ function renderWishlist() {
       </div>` : ''}
       <div class="item-actions">
         <span class="tag wishlist">${w.priority} priority</span>
+        ${!w.bought ? `<button class="log-pay-btn" style="background:rgba(124,111,247,0.15);border-color:rgba(124,111,247,0.3);color:var(--accent)" onclick="markBought(${w.id})">✓ Mark Bought</button>` : '<span class="tag settled">✓ Bought</span>'}
         <button class="del-btn" onclick="deleteWish(${w.id})">Delete</button>
       </div>
     </div>`).join('');
@@ -944,6 +1006,9 @@ function logPayment(id) {
   item.payments.push({ amt: actual, date: new Date().toISOString().split('T')[0] });
   input.value = '';
   save(); renderAll();
+  const rem = item.amt - item.payments.reduce((s,p)=>s+p.amt,0);
+  if (rem <= 0) showBanner('debt_settled', '🎊 Debt cleared!', 'You fully paid off ' + item.person);
+  else showBanner('debt_payment', '💪 Payment logged!', '₹' + fmt(actual) + ' paid to ' + item.person);
 }
 
 function deleteOwed(id) {
@@ -1025,6 +1090,7 @@ function addSaving() {
     returnRate: parseFloat(document.getElementById('sav-return').value) || 0
   });
   save(); renderAll();
+  showBanner('invest', '📈 Investment logged!', name + ' · ₹' + fmt(amt));
   document.getElementById('sav-name').value = '';
   document.getElementById('sav-amt').value = '';
   document.getElementById('sav-return').value = '';
@@ -1332,6 +1398,101 @@ function renderAll() {
   const activeTab = document.querySelector('.tab-content.active');
   if (activeTab && activeTab.id === 'tab-charts') renderCharts();
   if (activeTab && activeTab.id === 'tab-overview') renderOverviewCharts();
+  if (activeTab && activeTab.id === 'tab-settings') renderGifSlots();
+}
+
+
+// ============================================================
+// GIF SYSTEM
+// ============================================================
+const GIF_SLOTS = [
+  { id: 'expense_500',   label: 'Expense hits ₹500',       hint: 'Triggered when total expenses cross each ₹500 mark' },
+  { id: 'invest',        label: 'Investment added',         hint: 'Triggered when you add any saving/investment' },
+  { id: 'wishlist_add',  label: 'Wishlist item added',      hint: 'Triggered when you add something to wishlist' },
+  { id: 'wishlist_bought', label: 'Item marked as Bought',  hint: 'Triggered when you mark a wishlist item as bought' },
+  { id: 'debt_payment',  label: 'Debt payment logged',      hint: 'Triggered when you log a payment on a debt' },
+  { id: 'debt_settled',  label: 'Debt fully settled!',      hint: 'Triggered when a debt reaches 0 remaining' },
+];
+
+// GIFs stored as base64 in state
+if (!state.gifs) state.gifs = {};
+
+let bannerTimer = null;
+let lastExpenseMilestone = 0;
+
+function showBanner(gifId, title, sub) {
+  const gifData = state.gifs && state.gifs[gifId];
+  if (!gifData) return; // no gif uploaded for this event
+  const banner = document.getElementById('gif-banner');
+  const img = document.getElementById('gif-banner-img');
+  const titleEl = document.getElementById('gif-banner-title');
+  const subEl = document.getElementById('gif-banner-sub');
+  img.src = gifData;
+  titleEl.textContent = title;
+  subEl.textContent = sub;
+  banner.classList.add('show');
+  clearTimeout(bannerTimer);
+  bannerTimer = setTimeout(closeBanner, 4000);
+}
+
+function closeBanner() {
+  document.getElementById('gif-banner').classList.remove('show');
+}
+
+function checkExpenseMilestone() {
+  const total = state.expenses.reduce((s, e) => s + e.amt, 0);
+  const milestone = Math.floor(total / 500) * 500;
+  if (milestone > lastExpenseMilestone && milestone > 0) {
+    lastExpenseMilestone = milestone;
+    showBanner('expense_500', '💸 Spending milestone!', 'Spent ₹' + fmt(milestone) + ' total');
+  }
+}
+
+function renderGifSlots() {
+  const list = document.getElementById('gif-slots-list');
+  if (!list) return;
+  if (!state.gifs) state.gifs = {};
+  list.innerHTML = GIF_SLOTS.map(slot => {
+    const hasGif = !!state.gifs[slot.id];
+    return `<div class="gif-slot">
+      <div class="gif-slot-preview">
+        ${hasGif ? `<img src="${state.gifs[slot.id]}" alt="">` : '🎬'}
+      </div>
+      <div class="gif-slot-info">
+        <div class="gif-slot-label">${slot.label}</div>
+        <div class="gif-slot-hint">${slot.hint}</div>
+      </div>
+      <input type="file" accept="image/gif,image/webp,image/*" id="gif-file-${slot.id}" style="display:none" onchange="uploadGif('${slot.id}', this)">
+      <button class="gif-upload-btn" onclick="document.getElementById('gif-file-${slot.id}').click()">${hasGif ? 'Change' : 'Upload'}</button>
+      ${hasGif ? `<button class="gif-clear-btn" onclick="clearGif('${slot.id}')">✕</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function uploadGif(slotId, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    if (!state.gifs) state.gifs = {};
+    state.gifs[slotId] = e.target.result;
+    save();
+    renderGifSlots();
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearGif(slotId) {
+  if (state.gifs) delete state.gifs[slotId];
+  save(); renderGifSlots();
+}
+
+function markBought(id) {
+  const item = state.wishlist.find(w => w.id === id);
+  if (!item) return;
+  item.bought = true;
+  save(); renderAll();
+  showBanner('wishlist_bought', '🛍️ You got it!', item.name + ' marked as bought');
 }
 
 // ============================================================
