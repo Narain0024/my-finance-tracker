@@ -693,8 +693,10 @@ function showSyncStatus(s) {
 async function load() {
   const d = localStorage.getItem('financeData');
   if (d) {
-    const parsed = JSON.parse(d);
-    state = Object.assign(state, parsed);
+    try {
+      const parsed = JSON.parse(d);
+      state = Object.assign(state, parsed);
+    } catch(e) {}
     if (!state.gifs) state.gifs = {};
     if (!state.categories || !state.categories.length) state.categories = DEFAULT_CATS;
     if (!state.income) state.income = [];
@@ -704,13 +706,25 @@ async function load() {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/finance?id=eq.${DATA_ID}`, {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
     });
+    if (!res.ok) throw new Error('Network error');
     const rows = await res.json();
     if (rows && rows.length > 0 && rows[0].data) {
       const remote = rows[0].data;
-      state = Object.assign({}, state, remote, {
-        pin: remote.pin || state.pin,
-        faceIDEnabled: remote.faceIDEnabled !== undefined ? remote.faceIDEnabled : state.faceIDEnabled
-      });
+      // Only merge remote if it has actual data, to avoid overwriting local with empty remote
+      const remoteHasData = (remote.expenses && remote.expenses.length > 0) ||
+                            (remote.income && remote.income.length > 0) ||
+                            (remote.savings && remote.savings.length > 0) ||
+                            (remote.owed && remote.owed.length > 0);
+      const localHasData = (state.expenses && state.expenses.length > 0) ||
+                           (state.income && state.income.length > 0) ||
+                           (state.savings && state.savings.length > 0) ||
+                           (state.owed && state.owed.length > 0);
+      if (remoteHasData || !localHasData) {
+        state = Object.assign({}, state, remote, {
+          pin: remote.pin || state.pin,
+          faceIDEnabled: remote.faceIDEnabled !== undefined ? remote.faceIDEnabled : state.faceIDEnabled
+        });
+      }
       if (!state.gifs) state.gifs = {};
       if (!state.categories || !state.categories.length) state.categories = DEFAULT_CATS;
       if (!state.income) state.income = [];
@@ -718,7 +732,7 @@ async function load() {
       localStorage.setItem('financeData', JSON.stringify(state));
       renderAll();
     }
-  } catch(e) {}
+  } catch(e) { showSyncStatus('offline'); }
 }
 
 // ============================================================
@@ -891,7 +905,20 @@ function showTab(name, e) {
   if (name==='settings') { renderGifSlots(); renderCategorySettings(); document.getElementById('autolock-select').value = state.autoLock || 0; document.getElementById('lightmode-toggle').classList.toggle('on', state.lightMode); }
   if (name==='summary') renderMonthlySummary();
 }
-function toggleForm(id) { document.getElementById(id).classList.toggle('open'); }
+function toggleForm(id) {
+  document.getElementById(id).classList.toggle('open');
+  // Refresh date fields to today whenever a form is opened
+  if (id === 'exp-form') {
+    const d = document.getElementById('exp-date');
+    if (d && !d.value) d.value = today();
+    else if (d) d.value = today();
+  }
+  if (id === 'inc-form') {
+    const d = document.getElementById('inc-date');
+    if (d && !d.value) d.value = today();
+    else if (d) d.value = today();
+  }
+}
 
 // ============================================================
 // INCOME
