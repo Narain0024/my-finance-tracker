@@ -294,7 +294,8 @@
   <header>
     <div class="app-title">💰 Finance</div>
     <div class="header-right">
-      <div id="header-summary" style="font-size:13px;color:var(--text2)"></div>
+      <div id="sync-status" style="font-size:11px;color:var(--green);opacity:0;transition:opacity 0.4s"></div>
+    <div id="header-summary" style="font-size:13px;color:var(--text2)"></div>
       <button class="lock-btn" onclick="lockApp()">🔒 Lock</button>
     </div>
   </header>
@@ -558,18 +559,78 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 // ============================================================
-// STATE & STORAGE
+// STATE & STORAGE (Supabase sync)
 // ============================================================
+const SUPABASE_URL = 'https://qxvtgxxnxltczvxqrixu.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_9aCpNizy5NWOuDb6N2bdhw_H62D7otW';
+const DATA_ID = 'main';
+
 let state = {
   expenses: [], wishlist: [], owed: [], savings: [],
   budget: 20000, pin: null, faceIDEnabled: false
 };
 let chartInstances = {};
+let syncTimeout = null;
 
-function save() { localStorage.setItem('financeData', JSON.stringify(state)); }
-function load() {
+function save() {
+  localStorage.setItem('financeData', JSON.stringify(state));
+  clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(syncToSupabase, 800);
+}
+
+async function syncToSupabase() {
+  try {
+    const check = await fetch(`${SUPABASE_URL}/rest/v1/finance?id=eq.${DATA_ID}`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const existing = await check.json();
+    const method = existing && existing.length > 0 ? 'PATCH' : 'POST';
+    const url = method === 'PATCH'
+      ? `${SUPABASE_URL}/rest/v1/finance?id=eq.${DATA_ID}`
+      : `${SUPABASE_URL}/rest/v1/finance`;
+    await fetch(url, {
+      method,
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ id: DATA_ID, data: state })
+    });
+    showSyncStatus('synced');
+  } catch (e) {
+    showSyncStatus('offline');
+  }
+}
+
+function showSyncStatus(s) {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  el.textContent = s === 'synced' ? '✓ Synced' : '⚠ Offline';
+  el.style.color = s === 'synced' ? 'var(--green)' : 'var(--amber)';
+  el.style.opacity = '1';
+  setTimeout(() => el.style.opacity = '0', 2500);
+}
+
+async function load() {
   const d = localStorage.getItem('financeData');
   if (d) state = Object.assign(state, JSON.parse(d));
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/finance?id=eq.${DATA_ID}`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const rows = await res.json();
+    if (rows && rows.length > 0 && rows[0].data) {
+      const remote = rows[0].data;
+      state = Object.assign({}, state, remote, {
+        pin: remote.pin || state.pin,
+        faceIDEnabled: remote.faceIDEnabled !== undefined ? remote.faceIDEnabled : state.faceIDEnabled
+      });
+      localStorage.setItem('financeData', JSON.stringify(state));
+      renderAll();
+    }
+  } catch (e) {}
 }
 
 // ============================================================
