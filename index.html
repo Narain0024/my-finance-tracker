@@ -277,7 +277,7 @@
     <button class="num-btn" onclick="pinInput('7')">7</button>
     <button class="num-btn" onclick="pinInput('8')">8</button>
     <button class="num-btn" onclick="pinInput('9')">9</button>
-    <button class="num-btn" style="background:none;border:none;" onclick="tryFaceID()">👤</button>
+    <button class="num-btn" style="background:none;border:none;"></button>
     <button class="num-btn" onclick="pinInput('0')">0</button>
     <button class="num-btn" onclick="pinDelete()">⌫</button>
   </div>
@@ -604,10 +604,6 @@
           <div><div class="settings-label">Change PIN</div><div class="settings-hint">Set a new 4-digit PIN</div></div>
           <button class="change-pin-btn" onclick="changePin()">Change</button>
         </div>
-        <div class="settings-row">
-          <div><div class="settings-label">Face ID / Biometrics</div><div class="settings-hint">Use device biometrics to unlock</div></div>
-          <div class="toggle" id="faceid-toggle" onclick="toggleFaceIDSetting()"></div>
-        </div>
       </div>
     </div>
     <div class="settings-section">
@@ -758,7 +754,6 @@ function initLock() {
     document.getElementById('set-pin-note').textContent = 'You will use this PIN every time you open the app.';
   } else {
     lockMode = 'enter';
-    if (state.faceIDEnabled) setTimeout(tryFaceID, 400);
   }
 }
 
@@ -808,14 +803,6 @@ function lockApp() {
   updateDots(); document.getElementById('lock-error').textContent = '';
   document.getElementById('lock-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
-  if (state.faceIDEnabled) setTimeout(tryFaceID, 400);
-}
-function tryFaceID() {
-  if (!window.PublicKeyCredential) { showLockError('Biometrics not supported.'); return; }
-  PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(a => {
-    if (a && state.pin) navigator.credentials.get({ publicKey:{ challenge:new Uint8Array(32), timeout:60000, userVerification:'required', allowCredentials:[] } }).then(()=>unlock()).catch(()=>{});
-    else showLockError('Biometrics not available. Use PIN.');
-  });
 }
 function changePin() {
   lockMode='change'; pendingPin=''; pinEntry='';
@@ -826,10 +813,6 @@ function changePin() {
   updateDots();
   document.getElementById('lock-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
-}
-function toggleFaceIDSetting() {
-  state.faceIDEnabled = !state.faceIDEnabled;
-  document.getElementById('faceid-toggle').classList.toggle('on', state.faceIDEnabled); save();
 }
 
 // ============================================================
@@ -1296,7 +1279,6 @@ function renderOverview() {
   document.getElementById('gauge-spent').textContent='₹'+fmt(monthSpent);
   document.getElementById('gauge-budget-label').textContent='Budget: ₹'+fmt(budget);
   document.getElementById('header-summary').textContent='₹'+fmt(monthSpent)+' / ₹'+fmt(budget);
-  const ft = document.getElementById('faceid-toggle'); if (ft) ft.classList.toggle('on', state.faceIDEnabled);
 }
 function setBudget() {
   const val=parseFloat(document.getElementById('budget-input').value);
@@ -1603,7 +1585,7 @@ function clearAllData(){
 // HELPERS
 // ============================================================
 function fmt(n){return Math.round(n).toLocaleString('en-IN');}
-function today(){return new Date().toISOString().split('T')[0];}
+function today(){const n=new Date();return`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;}
 function formatDate(d){if(!d)return '';const[y,m,day]=d.split('-');return`${parseInt(day)} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m)-1]} ${y}`;}
 
 function renderAll() {
