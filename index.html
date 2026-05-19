@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Finance">
+<meta name="apple-mobile-web-app-title" content="Kubera">
 <link rel="apple-touch-icon" href="icon.jpeg">
 <link rel="icon" type="image/jpeg" href="icon.jpeg">
-<title>My Finance Tracker</title>
+<title>Kubera</title>
 <style>
   :root {
     --bg: #0f0f11; --bg2: #18181c; --bg3: #222228;
@@ -38,6 +38,20 @@
   .num-btn { height: 72px; border-radius: 50%; background: var(--bg3); border: 0.5px solid var(--border2); color: var(--text); font-size: 22px; font-weight: 400; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.12s; -webkit-tap-highlight-color: transparent; user-select: none; }
   .num-btn:active { transform: scale(0.94); background: var(--bg2); }
   .lock-error { color: var(--red); font-size: 13px; min-height: 18px; text-align: center; }
+  /* PROFILE CARD */
+  .profile-card { background:var(--bg2); border:0.5px solid var(--border2); border-radius:var(--radius); padding:16px; display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+  .profile-avatar-wrap { position:relative; flex-shrink:0; cursor:pointer; }
+  .profile-avatar { width:56px; height:56px; border-radius:50%; object-fit:cover; object-position:top; border:2px solid var(--accent); display:block; background:var(--bg3); }
+  .profile-avatar-placeholder { width:56px; height:56px; border-radius:50%; background:var(--bg3); border:2px dashed var(--border2); display:flex; align-items:center; justify-content:center; font-size:24px; cursor:pointer; }
+  .profile-avatar-badge { position:absolute; bottom:0; right:0; width:18px; height:18px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; color:#fff; border:1.5px solid var(--bg2); }
+  .profile-info { flex:1; }
+  .profile-name { font-size:16px; font-weight:600; color:var(--text); letter-spacing:-0.3px; }
+  .profile-name-input { font-size:15px; font-weight:500; color:var(--text); background:var(--bg3); border:0.5px solid var(--border2); border-radius:var(--radius-sm); padding:6px 10px; width:100%; font-family:inherit; }
+  .profile-name-input:focus { outline:none; border-color:var(--accent); }
+  .profile-edit-btn { font-size:12px; color:var(--accent); background:none; border:none; cursor:pointer; padding:0; font-family:inherit; margin-top:3px; display:block; }
+  /* header dynamic avatar */
+  .header-avatar { width:28px; height:28px; border-radius:50%; object-fit:cover; object-position:top; border:1.5px solid var(--accent); cursor:pointer; display:none; }
+  .header-name-tag { font-size:12px; font-weight:600; color:var(--text2); display:none; }
   .set-pin-note { font-size: 12px; color: var(--text3); text-align: center; max-width: 280px; line-height: 1.5; }
 
   /* MAIN APP */
@@ -46,9 +60,6 @@
   body.light header { background: rgba(244,243,248,0.9); }
   .app-title { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
   .header-right { display: flex; align-items: center; gap: 10px; }
-  .header-sig { display: flex; align-items: center; gap: 8px; }
-  .header-sig-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; object-position: center top; border: 1.5px solid var(--accent); flex-shrink: 0; }
-  .header-sig-name { font-size: 13px; font-weight: 600; color: var(--text2); letter-spacing: -0.2px; }
   .lock-btn { background: none; border: 0.5px solid var(--border2); border-radius: 8px; color: var(--text2); font-size: 12px; padding: 6px 12px; cursor: pointer; transition: all 0.15s; }
   .lock-btn:hover { border-color: var(--accent); color: var(--accent); }
 
@@ -248,7 +259,7 @@
 <div id="lock-screen">
   <div style="text-align:center">
     <div class="lock-icon">🔒</div>
-    <div class="lock-title" id="lock-title">My Finance</div>
+    <div class="lock-title" id="lock-title">Kubera</div>
     <div class="lock-subtitle" id="lock-subtitle">Enter your PIN</div>
   </div>
   <div class="pin-dots">
@@ -276,12 +287,13 @@
 <!-- MAIN APP -->
 <div id="app">
   <header>
-    <div class="app-title">💰 Finance</div>
-    <div class="header-sig">
-      <img class="header-sig-avatar" src="iconme.jpeg" alt="Narain">
-      <span class="header-sig-name">Narain</span>
+    <div style="display:flex;flex-direction:column;gap:1px">
+      <div class="app-title">⚡ Kubera</div>
+      <div style="font-size:10px;color:var(--text3);letter-spacing:0.04em">by narain</div>
     </div>
-    <div class="header-right">
+    <div class="header-right" style="gap:8px">
+      <img id="header-avatar-img" class="header-avatar" src="" alt="" onclick="showTab('settings',{currentTarget:document.querySelector('[onclick*=settings]')})">
+      <span id="header-name-tag" class="header-name-tag"></span>
       <div id="sync-status" style="font-size:11px;color:var(--green);opacity:0;transition:opacity 0.4s"></div>
       <div id="header-summary" style="font-size:13px;color:var(--text2)"></div>
       <button class="lock-btn" onclick="lockApp()">🔒</button>
@@ -540,6 +552,23 @@
 
   <!-- SETTINGS -->
   <div class="tab-content" id="tab-settings">
+    <!-- PROFILE -->
+    <div class="settings-section">
+      <div class="chart-title">Profile</div>
+      <div class="profile-card" id="profile-card">
+        <div class="profile-avatar-wrap" onclick="document.getElementById('pfp-input').click()">
+          <div class="profile-avatar-placeholder" id="profile-avatar-placeholder">👤</div>
+          <img id="profile-avatar-img" class="profile-avatar" src="" alt="" style="display:none">
+          <div class="profile-avatar-badge">✏️</div>
+          <input type="file" id="pfp-input" accept="image/*" style="display:none" onchange="uploadPFP(this)">
+        </div>
+        <div class="profile-info">
+          <div id="profile-name-display" class="profile-name" style="display:none"></div>
+          <input id="profile-name-input" class="profile-name-input" type="text" placeholder="Enter your name" oninput="saveProfile()" maxlength="24">
+          <button class="profile-edit-btn" onclick="document.getElementById('pfp-input').click()">Tap photo to change picture</button>
+        </div>
+      </div>
+    </div>
     <div class="settings-section">
       <div class="chart-title">Appearance</div>
       <div class="settings-card">
@@ -622,7 +651,7 @@ const DEFAULT_CATS = [
 let state = {
   expenses:[], wishlist:[], owed:[], savings:[], income:[], recurring:[],
   budget:20000, pin:null, faceIDEnabled:false, lightMode:false,
-  autoLock:0, categories: DEFAULT_CATS, gifs:{}
+  autoLock:0, categories: DEFAULT_CATS, gifs:{}, profileName:'', profilePFP:''
 };
 let chartInstances = {};
 let syncTimeout = null;
@@ -1455,6 +1484,49 @@ function checkSavingMilestone(){
   if(ms>lastSavMilestone&&ms>0){lastSavMilestone=ms;showBanner('saving_goal','🏦 Savings milestone!','You have saved ₹'+fmt(ms)+' total!');}
 }
 
+// ── PROFILE ──────────────────────────────────────────────────
+function saveProfile() {
+  const name = document.getElementById('profile-name-input').value.trim();
+  state.profileName = name;
+  save();
+  renderHeaderProfile();
+}
+function uploadPFP(input) {
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    state.profilePFP = e.target.result;
+    save(); renderProfileCard(); renderHeaderProfile();
+  };
+  reader.readAsDataURL(file);
+}
+function renderProfileCard() {
+  const name = state.profileName || '';
+  const pfp  = state.profilePFP  || '';
+  const inp  = document.getElementById('profile-name-input');
+  if(inp) inp.value = name;
+  const ph  = document.getElementById('profile-avatar-placeholder');
+  const img = document.getElementById('profile-avatar-img');
+  if(ph && img) {
+    if(pfp){ img.src=pfp; img.style.display='block'; ph.style.display='none'; }
+    else    { img.style.display='none'; ph.style.display='flex'; }
+  }
+}
+function renderHeaderProfile() {
+  const name = state.profileName || '';
+  const pfp  = state.profilePFP  || '';
+  const hImg = document.getElementById('header-avatar-img');
+  const hName= document.getElementById('header-name-tag');
+  if(hImg){
+    if(pfp){ hImg.src=pfp; hImg.style.display='block'; }
+    else   { hImg.style.display='none'; }
+  }
+  if(hName){
+    if(name){ hName.textContent=name; hName.style.display='block'; }
+    else    { hName.style.display='none'; }
+  }
+}
+
 function renderGifSlots(){
   const list=document.getElementById('gif-slots-list'); if(!list) return;
   if(!state.gifs) state.gifs={};
@@ -1529,7 +1601,7 @@ function renderAll() {
   if(activeTab){
     if(activeTab.id==='tab-charts') renderCharts();
     if(activeTab.id==='tab-overview') renderOverviewCharts();
-    if(activeTab.id==='tab-settings'){renderGifSlots();renderCategorySettings();}
+    if(activeTab.id==='tab-settings'){renderGifSlots();renderCategorySettings();renderProfileCard();}
     if(activeTab.id==='tab-summary') renderMonthlySummary();
   }
 }
@@ -1538,6 +1610,7 @@ function renderAll() {
 // INIT
 // ============================================================
 load();
+renderHeaderProfile();
 document.getElementById('exp-date').value=today();
 document.getElementById('inc-date').value=today();
 document.body.classList.toggle('light', state.lightMode);
