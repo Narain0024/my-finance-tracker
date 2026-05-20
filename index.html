@@ -225,9 +225,43 @@
   .gif-add-ph { width:66px; height:66px; border-radius:10px; border:1.5px dashed var(--border2); display:flex; align-items:center; justify-content:center; color:var(--text3); font-size:26px; cursor:pointer; flex-shrink:0; transition:all 0.15s; }
   .gif-add-ph:hover { border-color:var(--accent); color:var(--accent); }
 
+  /* CUSTOM CONFIRM DIALOG */
+  #confirm-overlay { position:fixed; inset:0; z-index:4000; background:rgba(0,0,0,0.7); backdrop-filter:blur(8px); display:none; align-items:flex-end; justify-content:center; padding-bottom:env(safe-area-inset-bottom); }
+  #confirm-overlay.show { display:flex; }
+  .confirm-sheet { background:var(--bg2); border-radius:20px 20px 0 0; width:100%; max-width:480px; padding:24px 20px 20px; text-align:center; }
+  .confirm-msg { font-size:16px; font-weight:600; color:var(--text); margin-bottom:6px; }
+  .confirm-sub { font-size:13px; color:var(--text2); margin-bottom:20px; line-height:1.4; }
+  .confirm-btns { display:flex; flex-direction:column; gap:10px; }
+  .confirm-delete-btn { width:100%; padding:14px; background:var(--red); color:#fff; border:none; border-radius:var(--radius-sm); font-size:16px; font-weight:600; cursor:pointer; font-family:inherit; }
+  .confirm-cancel-btn { width:100%; padding:14px; background:var(--bg3); color:var(--text2); border:0.5px solid var(--border2); border-radius:var(--radius-sm); font-size:16px; font-weight:500; cursor:pointer; font-family:inherit; }
+
   /* BUDGET WARNING TOAST */
   #budget-toast { position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%); z-index: 1999; background: var(--amber); color: #18181c; padding: 12px 20px; border-radius: 40px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,0.3); transition: bottom 0.4s cubic-bezier(0.34,1.56,0.64,1); white-space: nowrap; }
   #budget-toast.show { bottom: 32px; }
+
+  /* SMART NOTIFICATIONS */
+  #notif-panel { position:fixed; top:0; right:0; bottom:0; width:min(320px,92vw); background:var(--bg2); border-left:0.5px solid var(--border2); z-index:2500; transform:translateX(100%); transition:transform 0.3s cubic-bezier(0.4,0,0.2,1); display:flex; flex-direction:column; box-shadow:-8px 0 32px rgba(0,0,0,0.3); }
+  #notif-panel.open { transform:translateX(0); }
+  #notif-overlay { position:fixed; inset:0; z-index:2499; background:rgba(0,0,0,0.4); display:none; }
+  #notif-overlay.show { display:block; }
+  .notif-header { display:flex; align-items:center; justify-content:space-between; padding:20px 18px 14px; border-bottom:0.5px solid var(--border2); }
+  .notif-header-title { font-size:17px; font-weight:700; color:var(--text); }
+  .notif-close-btn { background:none; border:none; color:var(--text2); font-size:22px; cursor:pointer; line-height:1; padding:2px; }
+  .notif-list { flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px; }
+  .notif-item { background:var(--bg3); border-radius:var(--radius-sm); padding:13px 14px; border-left:3px solid var(--accent); }
+  .notif-item.warn { border-left-color:var(--amber); }
+  .notif-item.danger { border-left-color:var(--red); }
+  .notif-item.success { border-left-color:var(--green); }
+  .notif-item.info { border-left-color:#4ea8e0; }
+  .notif-icon { font-size:18px; margin-bottom:5px; }
+  .notif-title { font-size:14px; font-weight:600; color:var(--text); }
+  .notif-body { font-size:12px; color:var(--text2); margin-top:3px; line-height:1.4; }
+  .notif-time { font-size:11px; color:var(--text3); margin-top:5px; }
+  .notif-empty { text-align:center; padding:40px 20px; color:var(--text3); font-size:14px; }
+  .notif-bell { position:relative; cursor:pointer; background:none; border:none; padding:4px; line-height:1; }
+  .notif-bell-icon { font-size:20px; }
+  .notif-badge { position:absolute; top:0; right:0; min-width:16px; height:16px; background:var(--red); border-radius:8px; font-size:10px; font-weight:700; color:#fff; display:flex; align-items:center; justify-content:center; padding:0 3px; display:none; }
+  .notif-badge.show { display:flex; }
 
   .empty { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 14px; }
 
@@ -277,7 +311,7 @@
     <button class="num-btn" onclick="pinInput('7')">7</button>
     <button class="num-btn" onclick="pinInput('8')">8</button>
     <button class="num-btn" onclick="pinInput('9')">9</button>
-    <button class="num-btn" style="background:none;border:none;"></button>
+    <button class="num-btn" id="bio-numpad-btn" style="display:none;flex-direction:column;align-items:center;gap:2px;background:none;border:none;font-size:20px;color:var(--text2)" onclick="tryBiometric()">⬡<span style="font-size:9px;letter-spacing:0.02em">Biometrics</span></button>
     <button class="num-btn" onclick="pinInput('0')">0</button>
     <button class="num-btn" onclick="pinDelete()">⌫</button>
   </div>
@@ -294,6 +328,10 @@
     <div class="header-right" style="gap:8px">
       <img id="header-avatar-img" class="header-avatar" src="" alt="" onclick="showTab('settings',{currentTarget:document.querySelector('[onclick*=settings]')})">
       <span id="header-name-tag" class="header-name-tag"></span>
+      <button class="notif-bell" onclick="toggleNotifPanel()" aria-label="Notifications">
+        <span class="notif-bell-icon">🔔</span>
+        <span class="notif-badge" id="notif-badge"></span>
+      </button>
       <div id="sync-status" style="font-size:11px;color:var(--green);opacity:0;transition:opacity 0.4s"></div>
       <div id="header-summary" style="font-size:13px;color:var(--text2)"></div>
       <button class="lock-btn" onclick="lockApp()">🔒</button>
@@ -647,7 +685,7 @@ const DEFAULT_CATS = [
 let state = {
   expenses:[], wishlist:[], owed:[], savings:[], income:[], recurring:[],
   budget:20000, pin:null, faceIDEnabled:false, lightMode:false,
-  autoLock:0, categories: DEFAULT_CATS, gifs:{}, profileName:'', profilePFP:''
+  autoLock:0, categories: DEFAULT_CATS, gifs:{}, bioCredId:null, profileName:'', profilePFP:'', profileName:'', profilePFP:''
 };
 let chartInstances = {};
 let syncTimeout = null;
@@ -655,6 +693,7 @@ let autoLockTimer = null;
 
 function save() {
   localStorage.setItem('financeData', JSON.stringify(state));
+  setTimeout(renderNotifPanel, 200);
   clearTimeout(syncTimeout);
   syncTimeout = setTimeout(syncToSupabase, 800);
   resetAutoLock();
@@ -695,7 +734,14 @@ async function load() {
     } catch(e) {}
   }
   if (!state.gifs) state.gifs = {};
-  if (!state.categories || !state.categories.length) state.categories = DEFAULT_CATS;
+  if (!state.categories || !state.categories.length) {
+    state.categories = DEFAULT_CATS;
+  } else {
+    state.categories = state.categories.map((c, i) => {
+      if (typeof c === 'string') return { name: c, color: (DEFAULT_CATS[i] || {color:'#7c6ff7'}).color };
+      return c;
+    });
+  }
   if (!state.income) state.income = [];
   if (!state.recurring) state.recurring = [];
   try {
@@ -711,7 +757,14 @@ async function load() {
         faceIDEnabled: state.faceIDEnabled !== undefined ? state.faceIDEnabled : (remote.faceIDEnabled || false)
       });
       if (!state.gifs) state.gifs = {};
-      if (!state.categories || !state.categories.length) state.categories = DEFAULT_CATS;
+      if (!state.categories || !state.categories.length) {
+    state.categories = DEFAULT_CATS;
+  } else {
+    state.categories = state.categories.map((c, i) => {
+      if (typeof c === 'string') return { name: c, color: (DEFAULT_CATS[i] || {color:'#7c6ff7'}).color };
+      return c;
+    });
+  }
       if (!state.income) state.income = [];
       if (!state.recurring) state.recurring = [];
       localStorage.setItem('financeData', JSON.stringify(state));
@@ -746,14 +799,21 @@ document.addEventListener('keydown', resetAutoLock);
 // ============================================================
 let pinEntry = '', lockMode = 'enter', pendingPin = '';
 
-function initLock() {
+async function initLock() {
+  const bioBtn = document.getElementById('bio-numpad-btn');
   if (!state.pin) {
     lockMode = 'set';
-    document.getElementById('lock-title').textContent = 'Set your PIN';
+    document.getElementById('lock-title').textContent = 'Kubera';
     document.getElementById('lock-subtitle').textContent = 'Choose a 4-digit PIN';
-    document.getElementById('set-pin-note').textContent = 'You will use this PIN every time you open the app.';
+    document.getElementById('set-pin-note').textContent = 'You will use this PIN every time you open Kubera.';
+    if (bioBtn) bioBtn.style.display = 'none';
   } else {
     lockMode = 'enter';
+    document.getElementById('lock-title').textContent = 'Kubera';
+    const bioAvail = state.faceIDEnabled && state.bioCredId && window.PublicKeyCredential &&
+      await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(()=>false);
+    if (bioBtn) bioBtn.style.display = bioAvail ? 'flex' : 'none';
+    if (bioAvail) setTimeout(tryBiometric, 500);
   }
 }
 
@@ -795,9 +855,184 @@ function unlock() {
   pinEntry = ''; renderAll(); resetAutoLock();
   processRecurring();
 }
+// ── CUSTOM CONFIRM (confirm() blocked in iPhone PWA mode) ──────
+let _confirmCallback = null;
+function showConfirm(msg, sub, okLabel, callback) {
+  document.getElementById('confirm-msg').textContent = msg;
+  document.getElementById('confirm-sub').textContent = sub || 'This cannot be undone.';
+  document.getElementById('confirm-ok-btn').textContent = okLabel || 'Delete';
+  _confirmCallback = callback;
+  document.getElementById('confirm-overlay').classList.add('show');
+}
+function doConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('show');
+  if (_confirmCallback) { _confirmCallback(); _confirmCallback = null; }
+}
+function cancelConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('show');
+  _confirmCallback = null;
+}
+
+// ── SMART NOTIFICATIONS ─────────────────────────────────────
+let _notifCheckInterval = null;
+
+function buildNotifications() {
+  const notes = [];
+  const todayStr = today();
+  const now = new Date();
+
+  // 1. Budget warning
+  if (state.budget > 0) {
+    const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const spent = state.expenses.filter(e=>e.date&&e.date.startsWith(thisMonth)).reduce((s,e)=>s+e.amt,0);
+    const pct = (spent/state.budget)*100;
+    if (pct >= 100) notes.push({ type:'danger', icon:'🚨', title:'Budget exceeded!', body:`You have spent ₹${fmt(spent)} — ₹${fmt(spent-state.budget)} over your ₹${fmt(state.budget)} budget.` });
+    else if (pct >= 80) notes.push({ type:'warn', icon:'⚠️', title:'Budget at '+Math.round(pct)+'%', body:`₹${fmt(spent)} spent of ₹${fmt(state.budget)} this month. Only ₹${fmt(state.budget-spent)} left.` });
+  }
+
+  // 2. Overdue debts
+  const overdue = state.owed.filter(o => {
+    const paid = o.payments.reduce((s,p)=>s+p.amt,0);
+    return o.due && o.due < todayStr && paid < o.amt;
+  });
+  if (overdue.length) {
+    overdue.forEach(o => {
+      const paid = o.payments.reduce((s,p)=>s+p.amt,0);
+      notes.push({ type:'danger', icon:'📅', title:'Overdue: '+o.person, body:`₹${fmt(o.amt-paid)} still owed. Due was ${formatDate(o.due)}.` });
+    });
+  }
+
+  // 3. Debts due soon (within 7 days)
+  const soon = new Date(); soon.setDate(soon.getDate()+7);
+  const soonStr = soon.toISOString().slice(0,10);
+  state.owed.filter(o => {
+    const paid = o.payments.reduce((s,p)=>s+p.amt,0);
+    return o.due && o.due > todayStr && o.due <= soonStr && paid < o.amt;
+  }).forEach(o => {
+    const paid = o.payments.reduce((s,p)=>s+p.amt,0);
+    notes.push({ type:'warn', icon:'⏰', title:'Due soon: '+o.person, body:`₹${fmt(o.amt-paid)} due on ${formatDate(o.due)}.` });
+  });
+
+  // 4. No expenses logged today
+  const loggedToday = state.expenses.some(e=>e.date===todayStr);
+  if (!loggedToday && now.getHours() >= 18) {
+    notes.push({ type:'info', icon:'📝', title:"Haven't logged today", body:"You haven't added any expenses today. Open the Expenses tab to log." });
+  }
+
+  // 5. Large wishlist vs savings gap
+  const wishTotal = state.wishlist.filter(w=>!w.bought).reduce((s,w)=>s+w.price,0);
+  const savTotal  = state.savings.reduce((s,sv)=>s+sv.amt,0);
+  if (wishTotal > 0 && savTotal < wishTotal * 0.3) {
+    notes.push({ type:'info', icon:'🛍', title:'Wishlist vs Savings', body:`Your wishlist (₹${fmt(wishTotal)}) is much larger than your savings (₹${fmt(savTotal)}). Try saving more!` });
+  }
+
+  // 6. Savings milestone motivator
+  if (savTotal > 0) {
+    const next = Math.ceil(savTotal/10000)*10000;
+    const gap  = next - savTotal;
+    if (gap <= 2000 && gap > 0) {
+      notes.push({ type:'success', icon:'🏦', title:'Almost at ₹'+fmt(next)+'!', body:`Just ₹${fmt(gap)} more to hit your next savings milestone.` });
+    }
+  }
+
+  // 7. No income logged this month
+  const thisM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const incThisMonth = state.income.some(i=>i.date&&i.date.startsWith(thisM));
+  if (!incThisMonth && now.getDate() > 5) {
+    notes.push({ type:'info', icon:'💰', title:'No income this month', body:"You haven't logged any income yet this month. Don't forget to add your salary or earnings." });
+  }
+
+  return notes;
+}
+
+function renderNotifPanel() {
+  const notes = buildNotifications();
+  const list  = document.getElementById('notif-list');
+  const badge = document.getElementById('notif-badge');
+  if (!list) return;
+  if (!notes.length) {
+    list.innerHTML = '<div class="notif-empty">✨ All caught up!<br><span style="font-size:12px;margin-top:6px;display:block">No reminders right now.</span></div>';
+    if (badge) { badge.textContent=''; badge.classList.remove('show'); }
+    return;
+  }
+  list.innerHTML = notes.map(n=>`
+    <div class="notif-item ${n.type}">
+      <div class="notif-icon">${n.icon}</div>
+      <div class="notif-title">${n.title}</div>
+      <div class="notif-body">${n.body}</div>
+    </div>`).join('');
+  if (badge) { badge.textContent = notes.length > 9 ? '9+' : notes.length; badge.classList.add('show'); }
+}
+
+function toggleNotifPanel() {
+  const panel = document.getElementById('notif-panel');
+  const overlay = document.getElementById('notif-overlay');
+  const isOpen = panel.classList.contains('open');
+  if (isOpen) { closeNotifPanel(); }
+  else { renderNotifPanel(); panel.classList.add('open'); overlay.classList.add('show'); }
+}
+function closeNotifPanel() {
+  document.getElementById('notif-panel').classList.remove('open');
+  document.getElementById('notif-overlay').classList.remove('show');
+}
+function startNotifCheck() {
+  renderNotifPanel(); // initial badge count
+  // Re-check every 5 minutes while app is open
+  _notifCheckInterval = setInterval(renderNotifPanel, 5 * 60 * 1000);
+}
+
+// ── BIOMETRICS ──────────────────────────────────────────────
+async function checkBioAvailable() {
+  try { return window.PublicKeyCredential && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(); }
+  catch(e) { return false; }
+}
+async function registerBiometric() {
+  try {
+    const cred = await navigator.credentials.create({ publicKey: {
+      challenge: crypto.getRandomValues(new Uint8Array(32)),
+      rp: { name: 'Kubera', id: location.hostname },
+      user: { id: crypto.getRandomValues(new Uint8Array(16)), name: 'kubera-user', displayName: 'Kubera User' },
+      pubKeyCredParams: [{ type:'public-key', alg:-7 },{ type:'public-key', alg:-257 }],
+      authenticatorSelection: { authenticatorAttachment:'platform', userVerification:'required', residentKey:'preferred' },
+      timeout: 60000
+    }});
+    state.bioCredId = Array.from(new Uint8Array(cred.rawId));
+    state.faceIDEnabled = true; save();
+    const tog = document.getElementById('faceid-toggle');
+    if(tog) tog.classList.add('on');
+    alert('Biometrics registered! Next time you open Kubera, it will prompt Face ID or fingerprint.');
+  } catch(e) {
+    state.faceIDEnabled = false; state.bioCredId = null; save();
+    const tog = document.getElementById('faceid-toggle');
+    if(tog) tog.classList.remove('on');
+    alert('Setup failed — open the app via your Vercel HTTPS link (not a local file).\nError: ' + (e.message||e));
+  }
+}
+async function tryBiometric() {
+  if (!state.faceIDEnabled || !state.bioCredId) { showLockError('Enable biometrics in Settings first.'); return; }
+  try {
+    await navigator.credentials.get({ publicKey: {
+      challenge: crypto.getRandomValues(new Uint8Array(32)),
+      allowCredentials: [{ type:'public-key', id: new Uint8Array(state.bioCredId) }],
+      userVerification: 'required', timeout: 60000
+    }});
+    unlock();
+  } catch(e) { showLockError('Biometric failed — use PIN instead.'); }
+}
+async function toggleFaceIDSetting() {
+  if (state.faceIDEnabled) {
+    state.faceIDEnabled = false; state.bioCredId = null; save();
+    const tog = document.getElementById('faceid-toggle');
+    if(tog) tog.classList.remove('on');
+  } else {
+    if (!await checkBioAvailable()) { alert('Biometrics not supported on this device/browser.'); return; }
+    await registerBiometric();
+  }
+}
+
 function lockApp() {
   pinEntry=''; lockMode='enter';
-  document.getElementById('lock-title').textContent = 'My Finance';
+  document.getElementById('lock-title').textContent = 'Kubera';
   document.getElementById('lock-subtitle').textContent = 'Enter your PIN';
   document.getElementById('set-pin-note').textContent = '';
   updateDots(); document.getElementById('lock-error').textContent = '';
@@ -901,8 +1136,7 @@ function addIncome() {
   document.getElementById('inc-form').classList.remove('open');
 }
 function deleteIncome(id) {
-  if (!confirm('Delete this income entry?')) return;
-  state.income = state.income.filter(i=>i.id!==id); save(); renderAll();
+  showConfirm('Delete income entry?', 'This entry will be removed.', 'Delete', () => { state.income = state.income.filter(i=>i.id!==id); save(); renderAll(); });
 }
 function renderIncome() {
   const list = document.getElementById('inc-list');
@@ -945,8 +1179,7 @@ function addExpense() {
   document.getElementById('exp-form').classList.remove('open');
 }
 function deleteExpense(id) {
-  if (!confirm('Delete this expense?')) return;
-  state.expenses = state.expenses.filter(e=>e.id!==id); save(); renderAll();
+  showConfirm('Delete expense?', 'This entry will be removed.', 'Delete', () => { state.expenses = state.expenses.filter(e=>e.id!==id); save(); renderAll(); });
 }
 function renderExpenses() {
   const list = document.getElementById('exp-list');
@@ -993,8 +1226,7 @@ function addRecurring() {
   document.getElementById('rec-form').classList.remove('open');
 }
 function deleteRecurring(id) {
-  if (!confirm('Delete recurring expense?')) return;
-  state.recurring = state.recurring.filter(r=>r.id!==id); save(); renderRecurring();
+  showConfirm('Delete recurring expense?', 'It will stop being tracked.', 'Delete', () => { state.recurring = state.recurring.filter(r=>r.id!==id); save(); renderRecurring(); });
 }
 function processRecurring() {
   const now = new Date();
@@ -1094,8 +1326,7 @@ function addWishItem() {
   emiOn=false; document.getElementById('emi-toggle').classList.remove('on'); document.getElementById('emi-fields').style.display='none';
 }
 function deleteWish(id) {
-  if(!confirm('Remove from wishlist?')) return;
-  state.wishlist=state.wishlist.filter(w=>w.id!==id); save(); renderAll();
+  showConfirm('Remove from wishlist?', 'This item will be removed.', 'Remove', () => { state.wishlist=state.wishlist.filter(w=>w.id!==id); save(); renderAll(); });
 }
 function markBought(id) {
   const item=state.wishlist.find(w=>w.id===id); if(!item) return;
@@ -1153,8 +1384,7 @@ function logPayment(id) {
   else showBanner('debt_payment','💪 Payment logged!','₹'+fmt(actual)+' paid to '+item.person);
 }
 function deleteOwed(id) {
-  if(!confirm('Delete this entry?')) return;
-  state.owed=state.owed.filter(o=>o.id!==id); save(); renderAll();
+  showConfirm('Delete this entry?', 'Payment history will also be removed.', 'Delete', () => { state.owed=state.owed.filter(o=>o.id!==id); save(); renderAll(); });
 }
 function getOwedRemaining(item) { return Math.max(0,item.amt-item.payments.reduce((s,p)=>s+p.amt,0)); }
 function renderOwed() {
@@ -1219,8 +1449,7 @@ function addSaving() {
   document.getElementById('sav-form').classList.remove('open');
 }
 function deleteSaving(id) {
-  if(!confirm('Delete this saving?')) return;
-  state.savings=state.savings.filter(s=>s.id!==id); save(); renderAll();
+  showConfirm('Delete this saving?', 'This entry will be removed.', 'Delete', () => { state.savings=state.savings.filter(s=>s.id!==id); save(); renderAll(); });
 }
 function renderSavings() {
   const list=document.getElementById('sav-list');
@@ -1605,6 +1834,7 @@ function renderAll() {
 (async () => {
   await load();
   renderHeaderProfile();
+  startNotifCheck();
   document.getElementById('exp-date').value = today();
   document.getElementById('inc-date').value = today();
   document.body.classList.toggle('light', state.lightMode);
@@ -1612,5 +1842,30 @@ function renderAll() {
   initLock();
 })();
 </script>
+<!-- NOTIFICATION OVERLAY -->
+<div id="notif-overlay" onclick="closeNotifPanel()"></div>
+<!-- NOTIFICATION PANEL -->
+<div id="notif-panel">
+  <div class="notif-header">
+    <div class="notif-header-title">🔔 Reminders</div>
+    <button class="notif-close-btn" onclick="closeNotifPanel()">✕</button>
+  </div>
+  <div class="notif-list" id="notif-list">
+    <div class="notif-empty">All caught up! ✨</div>
+  </div>
+</div>
+
+<!-- CUSTOM CONFIRM DIALOG -->
+<div id="confirm-overlay" onclick="if(event.target===this)cancelConfirm()">
+  <div class="confirm-sheet">
+    <div class="confirm-msg" id="confirm-msg">Are you sure?</div>
+    <div class="confirm-sub" id="confirm-sub">This cannot be undone.</div>
+    <div class="confirm-btns">
+      <button class="confirm-delete-btn" id="confirm-ok-btn" onclick="doConfirm()">Delete</button>
+      <button class="confirm-cancel-btn" onclick="cancelConfirm()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
