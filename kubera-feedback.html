@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kubera — Share Your Feedback</title>
+<style>
+:root {
+  --bg:#0f0f11; --bg2:#18181c; --bg3:#222228;
+  --border:rgba(255,255,255,0.08); --border2:rgba(255,255,255,0.14);
+  --text:#f0eff4; --text2:#9896aa; --text3:#5a5970;
+  --accent:#7c6ff7; --green:#3fcf8e; --red:#f06060; --amber:#f0a840;
+  --radius:14px; --radius-sm:9px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:0 0 60px}
+
+.hero{text-align:center;padding:48px 24px 32px;background:linear-gradient(180deg,rgba(124,111,247,0.12) 0%,transparent 100%)}
+.hero-icon{font-size:52px;margin-bottom:12px}
+.hero-title{font-size:28px;font-weight:800;letter-spacing:-0.8px;margin-bottom:8px}
+.hero-sub{font-size:15px;color:var(--text2);line-height:1.6;max-width:400px;margin:0 auto}
+.hero-by{font-size:12px;color:var(--text3);margin-top:10px;letter-spacing:0.04em}
+
+.form-wrap{max-width:560px;margin:0 auto;padding:0 20px}
+.section-label{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin:28px 0 12px}
+.card{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius);overflow:hidden;margin-bottom:10px}
+
+.star-row{display:flex;justify-content:center;gap:6px;padding:20px}
+.star-btn{background:none;border:none;font-size:36px;cursor:pointer;transition:transform 0.15s;line-height:1;filter:grayscale(1)opacity(0.4)}
+.star-btn.lit{filter:none;transform:scale(1.1)}
+.star-label{text-align:center;font-size:13px;color:var(--text2);padding-bottom:16px;min-height:18px}
+
+.option-list{padding:6px 16px 12px;display:flex;flex-direction:column;gap:4px}
+.option-btn{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--radius-sm);border:0.5px solid transparent;background:var(--bg3);cursor:pointer;transition:all 0.15s;text-align:left;font-family:inherit;color:var(--text2);font-size:14px;width:100%}
+.option-btn:hover{border-color:var(--accent);color:var(--text)}
+.option-btn.selected{border-color:var(--accent);background:rgba(124,111,247,0.1);color:var(--text)}
+.option-dot{width:18px;height:18px;border-radius:50%;border:1.5px solid currentColor;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.option-btn.selected .option-dot::after{content:'';width:10px;height:10px;border-radius:50%;background:var(--accent);display:block}
+.option-emoji{font-size:18px;flex-shrink:0}
+
+.check-list{padding:6px 16px 12px;display:flex;flex-direction:column;gap:4px}
+.check-btn{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--radius-sm);border:0.5px solid transparent;background:var(--bg3);cursor:pointer;transition:all 0.15s;text-align:left;font-family:inherit;color:var(--text2);font-size:14px;width:100%}
+.check-btn:hover{border-color:var(--accent);color:var(--text)}
+.check-btn.selected{border-color:var(--accent);background:rgba(124,111,247,0.1);color:var(--text)}
+.check-box{width:18px;height:18px;border-radius:5px;border:1.5px solid currentColor;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px}
+.check-btn.selected .check-box{background:var(--accent);border-color:var(--accent);color:#fff}
+.check-btn.selected .check-box::after{content:'✓'}
+
+.textarea-wrap{padding:14px 16px 16px}
+textarea{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-size:14px;font-family:inherit;padding:12px 14px;resize:none;line-height:1.6;min-height:100px;transition:border-color 0.15s}
+textarea:focus{outline:none;border-color:var(--accent)}
+textarea::placeholder{color:var(--text3)}
+
+.input-wrap{padding:14px 16px 16px}
+input[type=text],input[type=email]{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-size:15px;font-family:inherit;padding:12px 14px;transition:border-color 0.15s}
+input:focus{outline:none;border-color:var(--accent)}
+input::placeholder{color:var(--text3)}
+
+.scale-row{display:flex;gap:6px;padding:16px 16px 8px;justify-content:space-between}
+.scale-btn{flex:1;padding:10px 4px;border:0.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg3);color:var(--text2);font-size:14px;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:inherit}
+.scale-btn:hover{border-color:var(--accent)}
+.scale-btn.selected{background:var(--accent);border-color:var(--accent);color:#fff}
+.scale-labels{display:flex;justify-content:space-between;padding:0 16px 14px;font-size:11px;color:var(--text3)}
+
+.submit-btn{width:100%;padding:16px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:24px;transition:opacity 0.15s;letter-spacing:-0.2px}
+.submit-btn:active{opacity:0.8}
+.submit-btn:disabled{opacity:0.4;cursor:not-allowed}
+
+#thankyou{display:none;text-align:center;padding:60px 24px}
+.ty-icon{font-size:64px;margin-bottom:16px}
+.ty-title{font-size:26px;font-weight:800;margin-bottom:10px;letter-spacing:-0.5px}
+.ty-sub{font-size:15px;color:var(--text2);line-height:1.6;max-width:360px;margin:0 auto}
+.ty-narain{font-size:13px;color:var(--text3);margin-top:20px}
+
+.progress-bar-wrap{height:3px;background:var(--border);margin:0 20px}
+.progress-bar{height:100%;background:var(--accent);border-radius:2px;transition:width 0.4s ease}
+.req{color:var(--accent);margin-left:2px}
+
+/* ADMIN VIEW */
+#admin-view{display:none;max-width:680px;margin:0 auto;padding:20px}
+.admin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:gap}
+.admin-header h2{font-size:22px;font-weight:800;letter-spacing:-0.5px}
+.admin-back{background:var(--bg2);border:0.5px solid var(--border2);color:var(--text2);padding:8px 16px;border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;font-size:13px}
+.admin-back:hover{color:var(--text)}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.stat-box{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius-sm);padding:14px;text-align:center}
+.stat-val{font-size:24px;font-weight:800;color:var(--accent)}
+.stat-lbl{font-size:11px;color:var(--text3);margin-top:4px}
+.resp-card{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius);padding:18px;margin-bottom:12px}
+.resp-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.resp-name{font-size:16px;font-weight:700}
+.resp-date{font-size:12px;color:var(--text3)}
+.resp-stars{font-size:18px;margin-bottom:8px}
+.resp-badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.badge{font-size:11px;padding:3px 10px;border-radius:99px;background:rgba(124,111,247,0.15);color:#a89af9;font-weight:500}
+.resp-row{font-size:13px;color:var(--text2);margin-bottom:6px;line-height:1.5}
+.resp-row strong{color:var(--text);font-weight:500}
+.nps-score{display:inline-block;padding:2px 8px;border-radius:6px;font-weight:700;font-size:13px}
+.nps-green{background:rgba(63,207,142,0.15);color:var(--green)}
+.nps-amber{background:rgba(240,168,64,0.15);color:var(--amber)}
+.nps-red{background:rgba(240,96,96,0.15);color:var(--red)}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text3)}
+.loading-state{text-align:center;padding:60px 20px;color:var(--text2)}
+.admin-btn{position:fixed;bottom:20px;right:20px;background:var(--bg2);border:0.5px solid var(--border2);color:var(--text2);padding:10px 18px;border-radius:99px;cursor:pointer;font-family:inherit;font-size:13px;z-index:100}
+.admin-btn:hover{color:var(--text)}
+@media(max-width:480px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- CONFIG — paste your Supabase details here                    -->
+<!-- ============================================================ -->
+<script>
+const SUPABASE_URL = 'https://qxvtgxxnxltczvxqrixu.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_9aCpNizy5NWOuDb6N2bdhw_H62D7otW';
+const TABLE = 'kubera_feedback';
+</script>
+<!-- ============================================================ -->
+
+<!-- FEEDBACK FORM -->
+<div id="main-form">
+  <div class="hero">
+    <div class="hero-icon">⚡</div>
+    <div class="hero-title">How's Kubera?</div>
+    <div class="hero-sub">Takes 2 minutes. Your feedback helps make the app better for everyone.</div>
+    <div class="hero-by">by narain</div>
+  </div>
+
+  <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+
+  <div class="form-wrap">
+
+    <div class="section-label">Overall experience <span class="req">*</span></div>
+    <div class="card">
+      <div class="star-row" id="star-row">
+        <button class="star-btn" onclick="setStars(1)" data-v="1">⭐</button>
+        <button class="star-btn" onclick="setStars(2)" data-v="2">⭐</button>
+        <button class="star-btn" onclick="setStars(3)" data-v="3">⭐</button>
+        <button class="star-btn" onclick="setStars(4)" data-v="4">⭐</button>
+        <button class="star-btn" onclick="setStars(5)" data-v="5">⭐</button>
+      </div>
+      <div class="star-label" id="star-label">Tap to rate</div>
+    </div>
+
+    <div class="section-label">Which sections do you use most? <span style="color:var(--text3);font-size:10px">(pick all that apply)</span></div>
+    <div class="card">
+      <div class="check-list" id="sections-list">
+        <button class="check-btn" onclick="toggleCheck(this,'sections')"><div class="check-box"></div><span class="option-emoji">🧾</span>Expenses</button>
+        <button class="check-btn" onclick="toggleCheck(this,'sections')"><div class="check-box"></div><span class="option-emoji">💰</span>Income</button>
+        <button class="check-btn" onclick="toggleCheck(this,'sections')"><div class="check-box"></div><span class="option-emoji">🛍</span>Wishlist</button>
+        <button class="check-btn" onclick="toggleCheck(this,'sections')"><div class="check-box"></div><span class="option-emoji">↔️</span>Money owed</button>
+        <button class="check-btn" onclick="toggleCheck(this,'sections')"><div class="check-box"></div><span class="option-emoji">🏦</span>Savings</button>
+        <button class="check-btn" onclick="toggleCheck(this,'sections')"><div class="check-box"></div><span class="option-emoji">📊</span>Charts / Insights</button>
+        <button class="check-btn" onclick="toggleCheck(this,'sections')"><div class="check-box"></div><span class="option-emoji">🔁</span>Recurring expenses</button>
+      </div>
+    </div>
+
+    <div class="section-label">How do you access Kubera? <span class="req">*</span></div>
+    <div class="card">
+      <div class="option-list">
+        <button class="option-btn" onclick="selectOption(this,'device')"><div class="option-dot"></div><span class="option-emoji">📱</span>iPhone (added to home screen)</button>
+        <button class="option-btn" onclick="selectOption(this,'device')"><div class="option-dot"></div><span class="option-emoji">🤖</span>Android (added to home screen)</button>
+        <button class="option-btn" onclick="selectOption(this,'device')"><div class="option-dot"></div><span class="option-emoji">💻</span>Laptop / Desktop browser</button>
+        <button class="option-btn" onclick="selectOption(this,'device')"><div class="option-dot"></div><span class="option-emoji">🌐</span>Phone browser (not home screen)</button>
+      </div>
+    </div>
+
+    <div class="section-label">How often do you use it? <span class="req">*</span></div>
+    <div class="card">
+      <div class="option-list">
+        <button class="option-btn" onclick="selectOption(this,'frequency')"><div class="option-dot"></div>Every day</button>
+        <button class="option-btn" onclick="selectOption(this,'frequency')"><div class="option-dot"></div>A few times a week</button>
+        <button class="option-btn" onclick="selectOption(this,'frequency')"><div class="option-dot"></div>Once a week</button>
+        <button class="option-btn" onclick="selectOption(this,'frequency')"><div class="option-dot"></div>Occasionally</button>
+        <button class="option-btn" onclick="selectOption(this,'frequency')"><div class="option-dot"></div>Just tried it once</button>
+      </div>
+    </div>
+
+    <div class="section-label">Would you recommend Kubera to a friend? <span class="req">*</span></div>
+    <div class="card">
+      <div class="scale-row" id="recommend-scale">
+        <button class="scale-btn" onclick="setScale(this,'recommend',1)">1</button>
+        <button class="scale-btn" onclick="setScale(this,'recommend',2)">2</button>
+        <button class="scale-btn" onclick="setScale(this,'recommend',3)">3</button>
+        <button class="scale-btn" onclick="setScale(this,'recommend',4)">4</button>
+        <button class="scale-btn" onclick="setScale(this,'recommend',5)">5</button>
+        <button class="scale-btn" onclick="setScale(this,'recommend',6)">6</button>
+        <button class="scale-btn" onclick="setScale(this,'recommend',7)">7</button>
+        <button class="scale-btn" onclick="setScale(this,'recommend',8)">8</button>
+        <button class="scale-btn" onclick="setScale(this,'recommend',9)">9</button>
+        <button class="scale-btn" onclick="setScale(this,'recommend',10)">10</button>
+      </div>
+      <div class="scale-labels"><span>Not at all</span><span>Definitely yes!</span></div>
+    </div>
+
+    <div class="section-label">What feature would you most like to see added?</div>
+    <div class="card">
+      <div class="option-list">
+        <button class="option-btn" onclick="selectOption(this,'feature')"><div class="option-dot"></div>Sync across devices</button>
+        <button class="option-btn" onclick="selectOption(this,'feature')"><div class="option-dot"></div>Export to Excel / PDF</button>
+        <button class="option-btn" onclick="selectOption(this,'feature')"><div class="option-dot"></div>Multiple accounts / wallets</button>
+        <button class="option-btn" onclick="selectOption(this,'feature')"><div class="option-dot"></div>Bill scan / photo receipt</button>
+        <button class="option-btn" onclick="selectOption(this,'feature')"><div class="option-dot"></div>UPI / bank auto-import</button>
+        <button class="option-btn" onclick="selectOption(this,'feature')"><div class="option-dot"></div>Shared expenses with others</button>
+        <button class="option-btn" onclick="selectOption(this,'feature')"><div class="option-dot"></div>I'm happy as it is!</button>
+      </div>
+    </div>
+
+    <div class="section-label">Did you face any bugs or issues?</div>
+    <div class="card">
+      <div class="textarea-wrap">
+        <textarea id="bugs" placeholder="Describe any bugs, confusing parts, or things that didn't work..." rows="3"></textarea>
+      </div>
+    </div>
+
+    <div class="section-label">Any other thoughts for Narain?</div>
+    <div class="card">
+      <div class="textarea-wrap">
+        <textarea id="other" placeholder="Suggestions, compliments, wishes... anything goes! 🙌" rows="3"></textarea>
+      </div>
+    </div>
+
+    <div class="section-label">Your name <span style="color:var(--text3);font-size:10px">(optional)</span></div>
+    <div class="card">
+      <div class="input-wrap">
+        <input type="text" id="responder-name" placeholder="What should we call you?">
+      </div>
+    </div>
+
+    <button class="submit-btn" id="submit-btn" onclick="submitForm()">Submit Feedback 🚀</button>
+    <p style="text-align:center;font-size:12px;color:var(--text3);margin-top:14px;margin-bottom:8px">Your responses are saved privately. No personal data is collected without your consent.</p>
+  </div>
+</div>
+
+<!-- THANK YOU -->
+<div id="thankyou">
+  <div class="ty-icon">🙏</div>
+  <div class="ty-title">Thank you!</div>
+  <div class="ty-sub" id="ty-sub">Your feedback means a lot. It helps make Kubera better for everyone who uses it.</div>
+  <div class="ty-narain">— Narain</div>
+</div>
+
+<!-- ADMIN VIEW RESPONSES -->
+<div id="admin-view">
+  <div class="admin-header">
+    <h2>📊 Responses</h2>
+    <button class="admin-back" onclick="showForm()">← Back to form</button>
+  </div>
+  <div class="stats-grid" id="stats-grid"></div>
+  <div id="resp-container"></div>
+</div>
+
+<!-- Hidden admin button — triple-click hero icon to open -->
+<button class="admin-btn" id="admin-btn" onclick="openAdmin()" title="View responses">👁</button>
+
+<script>
+const answers = { stars:0, sections:[], device:'', frequency:'', recommend:0, feature:'', bugs:'', other:'', name:'' };
+const starLabels = ['','😞 Poor','😕 Not great','😐 Okay','😊 Good','🤩 Excellent!'];
+const isConfigured = SUPABASE_URL !== 'YOUR_SUPABASE_URL';
+
+function setStars(n) {
+  answers.stars = n;
+  document.querySelectorAll('.star-btn').forEach((b,i) => b.classList.toggle('lit', i < n));
+  document.getElementById('star-label').textContent = starLabels[n];
+  updateProgress();
+}
+
+function selectOption(btn, group) {
+  btn.closest('.option-list').querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  answers[group] = btn.textContent.trim();
+  updateProgress();
+}
+
+function toggleCheck(btn, group) {
+  btn.classList.toggle('selected');
+  answers[group] = [...btn.closest('.check-list').querySelectorAll('.check-btn.selected')].map(b => b.textContent.trim());
+  updateProgress();
+}
+
+function setScale(btn, group, val) {
+  btn.closest('.scale-row').querySelectorAll('.scale-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  answers[group] = val;
+  updateProgress();
+}
+
+function updateProgress() {
+  const required = [answers.stars > 0, answers.device, answers.frequency, answers.recommend > 0];
+  const filled = required.filter(Boolean).length;
+  document.getElementById('progress-bar').style.width = Math.round((filled / required.length) * 100) + '%';
+  document.getElementById('submit-btn').disabled = filled < required.length;
+}
+
+async function submitForm() {
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  answers.bugs  = document.getElementById('bugs').value.trim();
+  answers.other = document.getElementById('other').value.trim();
+  answers.name  = document.getElementById('responder-name').value.trim();
+
+  const payload = {
+    name: answers.name || 'Anonymous',
+    stars: answers.stars,
+    sections: answers.sections,
+    device: answers.device,
+    frequency: answers.frequency,
+    recommend: answers.recommend,
+    feature: answers.feature,
+    bugs: answers.bugs,
+    other: answers.other
+  };
+
+  if (isConfigured) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error();
+    } catch(e) {
+      btn.disabled = false;
+      btn.textContent = 'Submit Feedback 🚀';
+      alert('Failed to save. Check your Supabase config.');
+      return;
+    }
+  }
+
+  document.getElementById('main-form').style.display = 'none';
+  document.getElementById('admin-btn').style.display = 'none';
+  document.getElementById('thankyou').style.display = 'block';
+
+  const name = answers.name || 'friend';
+  let msg = `Thanks${name !== 'friend' ? ', ' + name : ''}! `;
+  if (answers.stars >= 4) msg += "So glad you're enjoying Kubera. Your kind words keep this going! 🚀";
+  else if (answers.stars === 3) msg += "Appreciate the honest feedback. Your input will help make things better.";
+  else msg += "Sorry to hear it wasn't perfect. Your feedback is valuable and will be taken seriously.";
+  document.getElementById('ty-sub').textContent = msg;
+}
+
+function showForm() {
+  document.getElementById('admin-view').style.display = 'none';
+  document.getElementById('main-form').style.display = 'block';
+  document.getElementById('admin-btn').style.display = 'block';
+}
+
+async function openAdmin() {
+  document.getElementById('main-form').style.display = 'none';
+  document.getElementById('thankyou').style.display = 'none';
+  document.getElementById('admin-btn').style.display = 'none';
+  document.getElementById('admin-view').style.display = 'block';
+  document.getElementById('resp-container').innerHTML = '<div class="loading-state">Loading responses...</div>';
+  document.getElementById('stats-grid').innerHTML = '';
+
+  if (!isConfigured) {
+    document.getElementById('resp-container').innerHTML = '<div class="empty-state">⚠️ Add your Supabase URL and key to the config at the top of this file.</div>';
+    return;
+  }
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?order=submitted_at.desc`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const data = await res.json();
+
+    if (!data.length) {
+      document.getElementById('resp-container').innerHTML = '<div class="empty-state">No responses yet.</div>';
+      return;
+    }
+
+    // Stats
+    const avg = (data.reduce((s,r) => s + (r.stars||0), 0) / data.length).toFixed(1);
+    const avgNps = (data.reduce((s,r) => s + (r.recommend||0), 0) / data.length).toFixed(1);
+    const topSection = (() => {
+      const c = {};
+      data.forEach(r => (r.sections||[]).forEach(s => { c[s] = (c[s]||0)+1; }));
+      const e = Object.entries(c).sort((a,b)=>b[1]-a[1]);
+      return e.length ? e[0][0].split(' ').pop() : '—';
+    })();
+    document.getElementById('stats-grid').innerHTML = `
+      <div class="stat-box"><div class="stat-val">${data.length}</div><div class="stat-lbl">Total responses</div></div>
+      <div class="stat-box"><div class="stat-val">${avg} ⭐</div><div class="stat-lbl">Avg rating</div></div>
+      <div class="stat-box"><div class="stat-val">${avgNps}</div><div class="stat-lbl">Avg NPS score</div></div>
+      <div class="stat-box"><div class="stat-val">${topSection}</div><div class="stat-lbl">Top section used</div></div>
+    `;
+
+    // Cards
+    document.getElementById('resp-container').innerHTML = data.map(r => {
+      const stars = '⭐'.repeat(r.stars||0);
+      const npsClass = r.recommend >= 9 ? 'nps-green' : r.recommend >= 7 ? 'nps-amber' : 'nps-red';
+      const date = r.submitted_at ? new Date(r.submitted_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+      const sections = (r.sections||[]).map(s => `<span class="badge">${s}</span>`).join('');
+      return `<div class="resp-card">
+        <div class="resp-top">
+          <div class="resp-name">${r.name||'Anonymous'}</div>
+          <div class="resp-date">${date}</div>
+        </div>
+        <div class="resp-stars">${stars}</div>
+        <div class="resp-badges">
+          ${r.device ? `<span class="badge">${r.device}</span>` : ''}
+          ${r.frequency ? `<span class="badge">${r.frequency}</span>` : ''}
+          ${r.recommend ? `<span class="nps-score ${npsClass}">NPS ${r.recommend}/10</span>` : ''}
+        </div>
+        ${sections ? `<div class="resp-row" style="margin-bottom:10px"><strong>Uses:</strong> ${sections}</div>` : ''}
+        ${r.feature ? `<div class="resp-row"><strong>Wants:</strong> ${r.feature}</div>` : ''}
+        ${r.bugs ? `<div class="resp-row"><strong>Bugs:</strong> ${r.bugs}</div>` : ''}
+        ${r.other ? `<div class="resp-row"><strong>Other:</strong> ${r.other}</div>` : ''}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    document.getElementById('resp-container').innerHTML = '<div class="empty-state">Failed to load. Check your Supabase config.</div>';
+  }
+}
+
+document.getElementById('submit-btn').disabled = true;
+</script>
+</body>
+</html>
