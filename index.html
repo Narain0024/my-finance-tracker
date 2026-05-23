@@ -27,17 +27,70 @@
   body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.2s, color 0.2s; }
 
   /* LOCK SCREEN */
-  #lock-screen { position: fixed; inset: 0; z-index: 999; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 32px; padding: 2rem; }
-  .lock-icon { font-size: 48px; }
-  .lock-title { font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: -0.5px; }
-  .lock-subtitle { font-size: 14px; color: var(--text2); }
-  .pin-dots { display: flex; gap: 16px; margin: 8px 0; }
-  .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--text3); transition: all 0.2s; }
-  .pin-dot.filled { background: var(--accent); border-color: var(--accent); }
-  .numpad { display: grid; grid-template-columns: repeat(3, 72px); gap: 12px; }
-  .num-btn { height: 72px; border-radius: 50%; background: var(--bg3); border: 0.5px solid var(--border2); color: var(--text); font-size: 22px; font-weight: 400; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.12s; -webkit-tap-highlight-color: transparent; user-select: none; }
-  .num-btn:active { transform: scale(0.94); background: var(--bg2); }
-  .lock-error { color: var(--red); font-size: 13px; min-height: 18px; text-align: center; }
+  /* ── LOCK SCREEN ── */
+  #lock-screen {
+    position: fixed; inset: 0; z-index: 999;
+    background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 2rem; gap: 0;
+    animation: lockFadeIn 0.4s ease;
+  }
+  @keyframes lockFadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+  .lock-brand {
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    margin-bottom: 36px;
+  }
+  .lock-brand-icon {
+    width: 68px; height: 68px; border-radius: 20px;
+    background: linear-gradient(145deg, var(--accent), color-mix(in srgb, var(--accent) 60%, #000));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px; box-shadow: 0 8px 32px color-mix(in srgb, var(--accent) 40%, transparent);
+    margin-bottom: 2px;
+  }
+  .lock-title { font-size: 26px; font-weight: 800; color: var(--text); letter-spacing: -0.8px; }
+  .lock-subtitle { font-size: 13px; color: var(--text3); letter-spacing: 0.02em; margin-top: 2px; }
+  .pin-dots {
+    display: flex; gap: 14px; margin-bottom: 28px;
+  }
+  .pin-dot {
+    width: 13px; height: 13px; border-radius: 50%;
+    border: 1.5px solid var(--border2);
+    transition: all 0.18s cubic-bezier(0.34,1.56,0.64,1);
+    background: transparent;
+  }
+  .pin-dot.filled {
+    background: var(--accent); border-color: var(--accent);
+    transform: scale(1.15);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+  .numpad {
+    display: grid; grid-template-columns: repeat(3, 76px); gap: 10px;
+    margin-bottom: 20px;
+  }
+  .num-btn {
+    height: 76px; border-radius: 24px;
+    background: var(--bg2); border: 0.5px solid var(--border2);
+    color: var(--text); font-size: 22px; font-weight: 500;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.1s ease;
+    -webkit-tap-highlight-color: transparent; user-select: none;
+    box-shadow: 0 1px 0 var(--border2), inset 0 1px 0 rgba(255,255,255,0.04);
+    font-family: inherit;
+  }
+  .num-btn:hover { background: var(--bg3); border-color: var(--accent); }
+  .num-btn:active { transform: scale(0.93); background: var(--bg3); box-shadow: none; }
+  .lock-error {
+    color: var(--red); font-size: 12px; min-height: 16px;
+    text-align: center; letter-spacing: 0.01em;
+    margin-bottom: 6px;
+    animation: none;
+  }
+  .lock-error.shake {
+    animation: lockShake 0.35s ease;
+  }
+  @keyframes lockShake {
+    0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)}
+  }
   /* PROFILE CARD */
   .profile-card { background:var(--bg2); border:0.5px solid var(--border2); border-radius:var(--radius); padding:16px; display:flex; align-items:center; gap:14px; margin-bottom:16px; }
   .profile-avatar-wrap { position:relative; flex-shrink:0; cursor:pointer; }
@@ -201,9 +254,9 @@
   .change-pin-btn:hover { border-color: var(--accent); color: var(--accent); }
 
   /* GIF POPUP OVERLAY */
-  #gif-popup { position:fixed; inset:0; z-index:3000; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.82); backdrop-filter:blur(12px); opacity:0; pointer-events:none; transition:opacity 0.25s; }
+  #gif-popup { position:fixed; inset:0; z-index:3000; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.82); backdrop-filter:blur(8px); opacity:0; pointer-events:none; transition:opacity 0.18s ease; will-change:opacity; }
   #gif-popup.show { opacity:1; pointer-events:all; }
-  .gif-popup-card { background:var(--bg2); border:0.5px solid var(--border2); border-radius:24px; overflow:hidden; width:min(340px,88vw); box-shadow:0 32px 80px rgba(0,0,0,0.7); transform:scale(0.8) translateY(20px); transition:transform 0.38s cubic-bezier(0.34,1.56,0.64,1); }
+  .gif-popup-card { background:var(--bg2); border:0.5px solid var(--border2); border-radius:24px; overflow:hidden; width:min(340px,88vw); box-shadow:0 32px 80px rgba(0,0,0,0.7); transform:scale(0.82) translateY(16px); transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1); will-change:transform; }
   #gif-popup.show .gif-popup-card { transform:scale(1) translateY(0); }
   #gif-popup-img { width:100%; max-height:280px; object-fit:cover; display:block; }
   .gif-popup-body { padding:18px 20px 22px; }
@@ -291,16 +344,21 @@
 
 <!-- LOCK SCREEN -->
 <div id="lock-screen">
-  <div style="text-align:center">
-    <div class="lock-icon">🔒</div>
+  <div class="lock-brand">
+    <div class="lock-brand-icon">⚡</div>
     <div class="lock-title" id="lock-title">Kubera</div>
-    <div class="lock-subtitle" id="lock-subtitle">Enter your PIN</div>
+    <div class="lock-subtitle" id="lock-subtitle">Enter your PIN to continue</div>
   </div>
+
   <div class="pin-dots">
-    <div class="pin-dot" id="dot0"></div><div class="pin-dot" id="dot1"></div>
-    <div class="pin-dot" id="dot2"></div><div class="pin-dot" id="dot3"></div>
+    <div class="pin-dot" id="dot0"></div>
+    <div class="pin-dot" id="dot1"></div>
+    <div class="pin-dot" id="dot2"></div>
+    <div class="pin-dot" id="dot3"></div>
   </div>
+
   <div class="lock-error" id="lock-error"></div>
+
   <div class="numpad">
     <button class="num-btn" onclick="pinInput('1')">1</button>
     <button class="num-btn" onclick="pinInput('2')">2</button>
@@ -311,11 +369,15 @@
     <button class="num-btn" onclick="pinInput('7')">7</button>
     <button class="num-btn" onclick="pinInput('8')">8</button>
     <button class="num-btn" onclick="pinInput('9')">9</button>
-    <button class="num-btn" id="bio-numpad-btn" style="display:none;flex-direction:column;align-items:center;gap:2px;background:none;border:none;font-size:20px;color:var(--text2)" onclick="tryBiometric()">⬡<span style="font-size:9px;letter-spacing:0.02em">Biometrics</span></button>
+    <button class="num-btn" id="bio-numpad-btn"
+      style="display:none;flex-direction:column;align-items:center;gap:3px;font-size:22px;color:var(--accent)"
+      onclick="tryBiometric()">⬡<span style="font-size:9px;letter-spacing:0.04em;color:var(--text3)">Face ID</span></button>
     <button class="num-btn" onclick="pinInput('0')">0</button>
-    <button class="num-btn" onclick="pinDelete()">⌫</button>
+    <button class="num-btn" onclick="pinDelete()" style="font-size:18px">⌫</button>
   </div>
-  <div class="set-pin-note" id="set-pin-note"></div>
+
+  <div class="set-pin-note" id="set-pin-note"
+    style="font-size:12px;color:var(--text3);text-align:center;max-width:240px;line-height:1.5;margin-top:4px"></div>
 </div>
 
 <!-- MAIN APP -->
@@ -693,7 +755,9 @@ let autoLockTimer = null;
 
 function save() {
   localStorage.setItem('financeData', JSON.stringify(state));
-  setTimeout(renderNotifPanel, 200);
+  // Debounced — avoids re-running renderNotifPanel on every rapid keypress
+  clearTimeout(save._notifTimer);
+  save._notifTimer = setTimeout(renderNotifPanel, 800);
   clearTimeout(syncTimeout);
   syncTimeout = setTimeout(syncToSupabase, 800);
   resetAutoLock();
@@ -846,8 +910,12 @@ function checkPin() {
   }
 }
 function showLockError(msg) {
-  const el = document.getElementById('lock-error'); el.textContent = msg;
-  setTimeout(() => el.textContent='', 2000);
+  const el = document.getElementById('lock-error');
+  el.textContent = msg;
+  el.classList.remove('shake');
+  void el.offsetWidth;
+  el.classList.add('shake');
+  setTimeout(() => { el.textContent = ''; el.classList.remove('shake'); }, 2200);
 }
 function unlock() {
   document.getElementById('lock-screen').style.display = 'none';
@@ -1131,7 +1199,7 @@ function addIncome() {
   const date = document.getElementById('inc-date').value || today();
   if (!source || !amt || amt<=0) { alert('Fill in source and amount.'); return; }
   state.income.push({ id:Date.now(), source, amt, type:document.getElementById('inc-type').value, date });
-  save(); renderAll(); showBanner('income_add','💰 Income logged!',source+' · ₹'+fmt(amt));
+  save(); renderAll(); checkIncomeMilestone();
   document.getElementById('inc-source').value=''; document.getElementById('inc-amt').value='';
   document.getElementById('inc-form').classList.remove('open');
 }
@@ -1442,7 +1510,7 @@ function addSaving() {
   const goalTarget=parseFloat(document.getElementById('sav-goal-target').value)||0;
   state.savings.push({id:Date.now(),name,amt,type:document.getElementById('sav-type').value,returnRate:parseFloat(document.getElementById('sav-return').value)||0,goalName,goalTarget});
   save(); renderAll();
-  showBanner('invest','📈 Investment logged!',name+' · ₹'+fmt(amt));
+  // milestone checked below
   checkSavingMilestone();
   document.getElementById('sav-name').value=''; document.getElementById('sav-amt').value='';
   document.getElementById('sav-return').value=''; document.getElementById('sav-goal-name').value=''; document.getElementById('sav-goal-target').value='';
@@ -1669,41 +1737,115 @@ function renderDebtChart() {
 // GIF SYSTEM
 // ============================================================
 const GIF_SLOTS=[
-  {id:'expense_500',  label:'Budget / Spending alert',  hint:'Pops up at spending milestones or 80%+ budget used'},
-  {id:'income_add',   label:'Income logged',            hint:'Pops up every time you log income'},
-  {id:'invest',       label:'Investment added',         hint:'Pops up when you add a saving or investment'},
-  {id:'wishlist_add', label:'Wishlist item added',      hint:'Pops up when you add something to wishlist'},
-  {id:'wishlist_bought',label:'Item marked as Bought',  hint:'Pops up when you mark a wishlist item as bought'},
-  {id:'debt_payment', label:'Debt payment logged',      hint:'Pops up when you log a partial payment on a debt'},
-  {id:'debt_settled', label:'Debt fully settled!',      hint:'Pops up when you fully clear a debt'},
-  {id:'saving_goal',  label:'Savings milestone',        hint:'Pops up every ₹10,000 you save in total'},
+  {id:'expense_ms',   label:'Spending milestone (500, 1000, 1500…)', hint:'Triggers at every ₹500 spending milestone — not on every expense'},
+  {id:'income_ms',    label:'Income milestone (5000, 10000, 15000…)',hint:'Triggers at every ₹5,000 income milestone'},
+  {id:'invest_ms',    label:'Savings milestone (10000, 20000…)',     hint:'Triggers at every ₹10,000 savings milestone'},
+  {id:'wishlist_add', label:'Wishlist item added',                   hint:'Pops up when you add something to your wishlist'},
+  {id:'wishlist_bought',label:'Item marked as Bought',               hint:'Pops up when you mark a wishlist item as bought'},
+  {id:'debt_payment', label:'Debt payment logged',                   hint:'Pops up when you log a partial payment on a debt'},
+  {id:'debt_settled', label:'Debt fully settled!',                   hint:'Pops up when you fully clear a debt'},
 ];
-// Normalise gifs store: always arrays per slot
-function gifsFor(id){ const g=state.gifs&&state.gifs[id]; if(!g) return []; return Array.isArray(g)?g:[g]; }
 
-let popupTimer=null, lastExpMilestone=0, lastSavMilestone=0;
-
-function showBanner(gifId,title,sub){
-  const arr=gifsFor(gifId); if(!arr.length) return;
-  const src=arr[Math.floor(Math.random()*arr.length)];
-  document.getElementById('gif-popup-img').src=src;
-  document.getElementById('gif-popup-title').textContent=title;
-  document.getElementById('gif-popup-sub').textContent=sub;
-  document.getElementById('gif-popup').classList.add('show');
-  clearTimeout(popupTimer); popupTimer=setTimeout(closePopup,6000);
+// Always returns array — handles both old string and new array formats
+function gifsFor(id){
+  const g = state.gifs && state.gifs[id];
+  if(!g) return [];
+  return Array.isArray(g) ? g : [g];
 }
-function closePopup(){ document.getElementById('gif-popup').classList.remove('show'); }
+
+// Cached blob URLs so large base64 GIFs don't re-parse each time
+const _gifBlobCache = {};
+function gifSrc(base64){
+  if(_gifBlobCache[base64]) return _gifBlobCache[base64];
+  // Use directly — blob conversion not needed for display; just cache the ref
+  _gifBlobCache[base64] = base64;
+  return base64;
+}
+
+let popupTimer = null;
+let popupQueue = [];   // queued banners so rapid adds don't stack glitchily
+let popupShowing = false;
+
+// Milestone trackers — persisted in state so they survive refresh
+function getMilestone(key){ return (state.gifMilestones && state.gifMilestones[key]) || 0; }
+function setMilestone(key, val){ if(!state.gifMilestones) state.gifMilestones={}; state.gifMilestones[key]=val; }
+
+function showBanner(gifId, title, sub){
+  const arr = gifsFor(gifId);
+  if(!arr.length) return;
+  // Queue instead of stacking — avoids glitchy rapid-fire
+  popupQueue.push({ gifId, title, sub, arr });
+  if(!popupShowing) _showNext();
+}
+
+function _showNext(){
+  if(!popupQueue.length){ popupShowing=false; return; }
+  popupShowing = true;
+  const { title, sub, arr } = popupQueue.shift();
+  const src = gifSrc(arr[Math.floor(Math.random()*arr.length)]);
+
+  const popup = document.getElementById('gif-popup');
+  const img   = document.getElementById('gif-popup-img');
+  // Pre-load then show — eliminates the "blank flash then GIF" delay
+  const tmpImg = new Image();
+  tmpImg.onload = () => {
+    img.src = src;
+    document.getElementById('gif-popup-title').textContent = title;
+    document.getElementById('gif-popup-sub').textContent   = sub;
+    popup.classList.add('show');
+    clearTimeout(popupTimer);
+    popupTimer = setTimeout(closePopup, 5500);
+  };
+  tmpImg.onerror = () => {
+    // fallback if preload fails — show anyway
+    img.src = src;
+    document.getElementById('gif-popup-title').textContent = title;
+    document.getElementById('gif-popup-sub').textContent   = sub;
+    popup.classList.add('show');
+    clearTimeout(popupTimer);
+    popupTimer = setTimeout(closePopup, 5500);
+  };
+  tmpImg.src = src;
+}
+
+function closePopup(){
+  document.getElementById('gif-popup').classList.remove('show');
+  clearTimeout(popupTimer);
+  // Small gap between queued popups
+  setTimeout(() => { popupShowing = false; _showNext(); }, 350);
+}
 function closeBanner(){ closePopup(); }
 
+// ── MILESTONE CHECKS (500/1000/1500… for expenses; 5000/10000… for income; 10000/20000… for savings) ──
 function checkExpenseMilestone(){
-  const total=state.expenses.reduce((s,e)=>s+e.amt,0);
-  const ms=Math.floor(total/500)*500;
-  if(ms>lastExpMilestone&&ms>0){lastExpMilestone=ms;showBanner('expense_500','💸 Spending milestone!','You have spent ₹'+fmt(ms)+' so far');}
+  const total = state.expenses.reduce((s,e)=>s+e.amt, 0);
+  const STEP  = 500;
+  const ms    = Math.floor(total / STEP) * STEP;
+  const last  = getMilestone('exp');
+  if(ms > 0 && ms > last){
+    setMilestone('exp', ms);
+    showBanner('expense_ms','💸 Spending milestone!','You have spent ₹'+fmt(ms)+' — keep tracking!');
+  }
+}
+function checkIncomeMilestone(){
+  const total = state.income.reduce((s,i)=>s+i.amt, 0);
+  const STEP  = 5000;
+  const ms    = Math.floor(total / STEP) * STEP;
+  const last  = getMilestone('inc');
+  if(ms > 0 && ms > last){
+    setMilestone('inc', ms);
+    showBanner('income_ms','💰 Income milestone!','Total income hit ₹'+fmt(ms)+'!');
+  }
 }
 function checkSavingMilestone(){
-  const total=state.savings.reduce((s,i)=>s+i.amt,0);
-  const ms=Math.floor(total/10000)*10000;
-  if(ms>lastSavMilestone&&ms>0){lastSavMilestone=ms;showBanner('saving_goal','🏦 Savings milestone!','You have saved ₹'+fmt(ms)+' total!');}
+  const total = state.savings.reduce((s,i)=>s+i.amt, 0);
+  const STEP  = 10000;
+  const ms    = Math.floor(total / STEP) * STEP;
+  const last  = getMilestone('sav');
+  if(ms > 0 && ms > last){
+    setMilestone('sav', ms);
+    showBanner('invest_ms','🏦 Savings milestone!','You have saved ₹'+fmt(ms)+' total!');
+  }
 }
 
 // ── PROFILE ──────────────────────────────────────────────────
@@ -1774,27 +1916,36 @@ function renderGifSlots(){
   }).join('');
 }
 
-function uploadGif(slotId,input){
-  const file=input.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    if(!state.gifs) state.gifs={};
-    const cur=gifsFor(slotId);
-    if(cur.length>=3){ alert('Max 3 GIFs per slot. Remove one first.'); return; }
-    cur.push(e.target.result);
-    state.gifs[slotId]=cur;
-    input.value='';
-    save(); renderGifSlots();
+function uploadGif(slotId, input){
+  const file = input.files[0]; if(!file) return;
+  if(!state.gifs) state.gifs = {};
+  const cur = gifsFor(slotId);
+  if(cur.length >= 3){ alert('Max 3 GIFs per slot. Remove one first.'); input.value=''; return; }
+
+  // Show instant placeholder thumb so UI feels immediate
+  const thumbs = document.querySelector(`#gif-slots-list .gif-thumbs`);
+  // (full re-render after load is fine; placeholder just removes perceived lag)
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    if(!state.gifs) state.gifs = {};
+    const cur2 = gifsFor(slotId);
+    if(cur2.length >= 3){ input.value=''; return; }
+    cur2.push(e.target.result);
+    state.gifs[slotId] = cur2;
+    input.value = '';
+    // Save async after render so UI doesn't block
+    requestAnimationFrame(() => { renderGifSlots(); save(); });
   };
   reader.readAsDataURL(file);
 }
-function removeGif(slotId,idx){
+function removeGif(slotId, idx){
   if(!state.gifs) return;
-  const cur=gifsFor(slotId);
+  const cur = gifsFor(slotId);
   cur.splice(idx,1);
-  state.gifs[slotId]=cur.length?cur:undefined;
+  state.gifs[slotId] = cur.length ? cur : undefined;
   if(!cur.length) delete state.gifs[slotId];
-  save(); renderGifSlots();
+  requestAnimationFrame(() => { renderGifSlots(); save(); });
 }
 function clearGif(slotId){ if(state.gifs) delete state.gifs[slotId]; save(); renderGifSlots(); }
 
